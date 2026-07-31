@@ -1,0 +1,13 @@
+.vscode
+.idea
+.env
+
+*.pth
+*.safetensors
+
+temp/
+source/*.pdf
+output/*.png
+output/*.jpg
+output/*.jpeg
+output/*.webp
