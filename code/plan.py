@@ -15,10 +15,10 @@ from utils.retry import retry_sync
 
 
 class ContentPlanner:
-    def __init__(self, api_key, base_url, model, output_dir):
+    def __init__(self, api_key, base_url, model, plan_max_tokens):
         self.model = model
-        self.output_dir = output_dir
         self.client = OpenAI(api_key=api_key, base_url=base_url)
+        self.plan_max_tokens = plan_max_tokens
 
     def plan(self, summary_data, poster_density="medium"):
         content_data = summary_data["content"]
@@ -134,7 +134,7 @@ class ContentPlanner:
                 model=self.model,
                 messages=[{"role": "user", "content": content}],
                 temperature=0.2,
-                max_tokens=int(os.getenv("RAG_LLM_MAX_TOKENS")),
+                max_tokens=self.plan_max_tokens,
                 response_format={"type": "json_object"},    # https://developers.openai.com/api/docs/guides/structured-outputs
             )
         )
@@ -180,23 +180,17 @@ class ContentPlanner:
         return sections
 
 
-async def run_plan_stage(output_dir, poster_density="medium"):
-    summary_path = os.path.join(output_dir, "checkpoint_summary.json")
-    with open(summary_path, "r", encoding="utf-8") as f:
-        summary_data = json.load(f)
-
-    # TODO: 环境检验，导入args
-    api_key = os.getenv("RAG_LLM_API_KEY")
+async def run_plan_stage(summary_data, poster_density, vlm_config, plan_max_tokens):
     planner = ContentPlanner(
-        api_key=api_key,
-        base_url=os.getenv("RAG_LLM_BASE_URL"),
-        model=os.getenv("LLM_MODEL"),
-        output_dir=output_dir,
+        api_key=vlm_config.api_key,
+        base_url=vlm_config.base_url,
+        model=vlm_config.model,
+        plan_max_tokens=plan_max_tokens
     )
-    temp_result,plan = planner.plan(summary_data, poster_density)
-    result = {
+    temp_result, plan = planner.plan(summary_data, poster_density)
+    plan_result = {
         "plan": plan,
         "origin": summary_data["origin"],
         "content_type": summary_data.get("content_type", "paper"),
     }
-    return temp_result, result
+    return temp_result, plan_result

@@ -2,12 +2,11 @@
 .idea
 .env
 
+__pycache__/
+
 *.pth
 *.safetensors
 
 temp/
-source/*.pdf
-output/*.png
-output/*.jpg
-output/*.jpeg
-output/*.webp
+source/
+output/

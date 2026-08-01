@@ -18,6 +18,8 @@ from prompt.query import RAG_PAPER_QUERIES, RAG_QUERY_MODES
 from rag import RAGClient
 from summary import run_summary_stage
 
+from utils.load_env import load_app_config
+
 def set_log(args):
     logger = logging.getLogger()
     if logger.handlers:
@@ -41,29 +43,30 @@ def set_log(args):
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
-
+# 控制台启动界面
 def start_up():
     console = Console()
     logo=pyfiglet.figlet_format("PNP", font="starwars") # font="block", width=200
     console.print(logo, style="bold cyan")
     console.print("🚀 Initializing...\n")
 
+# 初始化文件树和日志
 def initialize(args):
-    if os.path.exists(args.save_dir):
-        shutil.rmtree(args.save_dir)
-    os.makedirs(args.save_dir, exist_ok=True)
-
     if not os.path.exists(args.source_dir):
         raise FileNotFoundError(f"Source directory does not exist")
     if not os.path.isdir(args.source_dir):
         raise ValueError(f"Source directory must be a directory")
+
+    if os.path.exists(args.save_dir):
+        shutil.rmtree(args.save_dir)
+    os.makedirs(args.save_dir, exist_ok=True)
+    os.makedirs(os.path.join(args.save_dir, "temp_result"), exist_ok=True)
 
     if os.path.exists(args.output_dir):
         shutil.rmtree(args.output_dir)
     os.makedirs(args.output_dir, exist_ok=True)
 
     set_log(args)
-    load_dotenv()       # TODO: 环境验证程序+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -77,8 +80,13 @@ def parse_args():
     # Resolutions above 2560x1440 are experimental, and the maximum supported resolution is 3840x2160
     parser.add_argument("--image_size", type=str, default="3840x2160")
     parser.add_argument("--image_quality", type=str, default="high", choices=["low", "medium", "high"])
+
+    # Custom style must be specified when using the "custom" style
+    parser.add_argument("--style", type=str, default="academic", choices=["academic", "custom","doraemon"])
+    parser.add_argument("--custom_style", type=str, default=None)
     args = parser.parse_args()
     return args
+
 
 
 
@@ -86,34 +94,35 @@ def parse_args():
 if __name__ == "__main__":
     start_up()
     args = parse_args()
+    config = load_app_config()
     initialize(args)
     logging.info(" ✅ Finish file path initialization")
 
-    # 解析
+    # 解析文档
     logging.info("\n")
     logging.info(f" 🚀 Parsering files...")
     minparser=BatchParser()
-    batch_result = minparser.process_documents_batch(source_dir=args.source_dir,output_dir=args.save_dir)
-    # 保存解析中间结果
-    batch_result_path = os.path.join(args.save_dir, "batch_result.json")
-    with open(batch_result_path, "w", encoding="utf-8") as f:
-        json.dump(batch_result, f, ensure_ascii=False, indent=2)
-    logging.info(f" ✅ Saved batch_result: {batch_result_path}")
+    parser_batch_result = minparser.process_documents_batch(source_dir=args.source_dir,output_dir=args.save_dir)
+
+    parser_batch_result_path = os.path.join(args.save_dir, "temp_result", "parser_batch_result.json")
+    with open(parser_batch_result_path, "w", encoding="utf-8") as f:
+        json.dump(parser_batch_result, f, ensure_ascii=False, indent=2)
+    logging.info(f" ✅ Saved batch_result: {parser_batch_result_path}")
 
     async def process_agent():
         logging.info("\n")
         logging.info(" 🚀 Initializing RAGClient...")
-        indexer = RAGClient(output_dir=args.save_dir)
+        indexer = RAGClient(output_dir=args.save_dir, config=config)
         await indexer.initialize()
         # 建库
         logging.info("\n")
         logging.info(f" 🚀 Index before RAG...")
-        index_results = await indexer.index_batch(batch_result)
-        # 保存建库中间结果
-        index_results_path = os.path.join(args.save_dir, "index_results.json")
-        with open(index_results_path, "w", encoding="utf-8") as f:
-            json.dump(index_results, f, ensure_ascii=False, indent=2)
-        logging.info(f" ✅ Saved index_results: {index_results_path}")
+        rag_index_results = await indexer.index_batch(parser_batch_result)
+
+        rag_index_results_path = os.path.join(args.save_dir, "temp_result", "rag_index_results.json")
+        with open(rag_index_results_path, "w", encoding="utf-8") as f:
+            json.dump(rag_index_results, f, ensure_ascii=False, indent=2)
+        logging.info(f" ✅ Saved index_results: {rag_index_results_path}")
 
         # RAG
         logging.info("\n")
@@ -123,61 +132,63 @@ if __name__ == "__main__":
             RAG_QUERY_MODES,
             max_concurrency=2,  # 受限于OPENAI的TPM,我降低并发数8->2
         )
-        checkpoint = {
+        rag_checkpoint = {
             "rag_results": rag_results,
             "markdown_paths": sorted(str(path) for path in Path(args.save_dir).rglob("*.md")),
-            "input_paths": batch_result["successful_files"],
+            "input_paths": parser_batch_result["successful_files"],
             "mode": "normal",   # TODO:mode设置，和可支持的体验推荐
         }
         # 保存RAG检查点
-        checkpoint_path = os.path.join(args.save_dir, "checkpoint_rag.json")
-        with open(checkpoint_path, "w", encoding="utf-8") as file:
-            json.dump(checkpoint, file, ensure_ascii=False, indent=2)
-        logging.info(f" ✅ Saved RAG checkpoint: {checkpoint_path}")
+        rag_checkpoint_path = os.path.join(args.save_dir, "temp_result", "rag_checkpoint.json")
+        with open(rag_checkpoint_path, "w", encoding="utf-8") as file:
+            json.dump(rag_checkpoint, file, ensure_ascii=False, indent=2)
+        logging.info(f" ✅ Saved RAG checkpoint: {rag_checkpoint_path}")
 
         # 释放RAG Storage
         await indexer.close()
         logging.info(f" ✅ Release the RAG Storage")
 
-        # Summary阶段
+        # Summary stage
         logging.info("\n")
         logging.info(f" 🚀 Start summary stage ...")
-        content, summary_text, result = await run_summary_stage(args.save_dir, checkpoint)
+        content, summary_text, summary_checkpoint = await run_summary_stage(rag_checkpoint, config.llm)
 
-        # 保存中间结果
-        summary_path = os.path.join(args.save_dir, "summary.md")
-        checkpoint_path = os.path.join(args.save_dir, "checkpoint_summary.json")
+        summary_path = os.path.join(args.save_dir,"temp_result", "summary.md")
+        summary_checkpoint_path = os.path.join(args.save_dir, "temp_result", "summary_checkpoint.json")
         with open(summary_path, "w", encoding="utf-8") as f:
             f.write(summary_text)
-        with open(checkpoint_path, "w", encoding="utf-8") as f:
-            json.dump(
-                result,
-                f,
-                ensure_ascii=False,
-                indent=2,
-                default=str,
-            )
+        with open(summary_checkpoint_path, "w", encoding="utf-8") as f:
+            json.dump(summary_checkpoint,f,ensure_ascii=False,indent=2,default=str)
         logging.info(f" ✅ Saved summary: {summary_path}")
-        logging.info(f" ✅ Saved summary checkpoint: {checkpoint_path}")
+        logging.info(f" ✅ Saved summary checkpoint: {summary_checkpoint_path}")
 
         # Plan stage
         logging.info("\n")
         logging.info(f" 🚀 Start plan stage ...")
-        plan_temp_result, plan_result = await run_plan_stage(args.save_dir, poster_density=args.poster_density)
-        # 保存中间结果
-        plan_temp_result_path = os.path.join(args.save_dir, "plan_temp_result.json")
-        plan_result_path = os.path.join(args.save_dir, "checkpoint_plan.json")
+        plan_temp_result, plan_checkpoint = await run_plan_stage(summary_checkpoint, args.poster_density, config.vlm, config.plan_max_tokens)
+
+        plan_temp_result_path = os.path.join(args.save_dir, "temp_result", "plan_temp_result.json")
+        plan_checkpoint_path = os.path.join(args.save_dir, "temp_result", "plan_checkpoint.json")
         with open(plan_temp_result_path, "w", encoding="utf-8") as f:
             json.dump(plan_temp_result,f,ensure_ascii=False,indent=2,default=str)
-        with open(plan_result_path, "w", encoding="utf-8") as f:
-            json.dump(plan_result,f,ensure_ascii=False,indent=2,default=str)
+        with open(plan_checkpoint_path, "w", encoding="utf-8") as f:
+            json.dump(plan_checkpoint,f,ensure_ascii=False,indent=2,default=str)
         logging.info(f" ✅ Saved plan temp result: {plan_temp_result_path}")
-        logging.info(f" ✅ Saved plan result checkpoint: {plan_result_path}")
+        logging.info(f" ✅ Saved plan result checkpoint: {plan_checkpoint_path}")
 
         # Generation stage
         logging.info("\n")
         logging.info(f" 🚀 Start generation stage ...")
-        poster_result = await run_generate_stage(args.save_dir,args.output_dir, args.image_size, args.image_quality, style="academic")
+        poster_result = await run_generate_stage(
+            plan_data=plan_checkpoint,
+            poster_dir=args.output_dir,
+            image_size=args.image_size,
+            image_quality=args.image_quality,
+            image_gen_config=config.image_gen,
+            prompt_config=config.llm,
+            style=args.style,
+            custom_style=args.custom_style,
+        )
         logging.info(f" 🎉🎉🎉 Finish generation stage: {poster_result['poster_path']} ...")
 
 

@@ -219,15 +219,13 @@ def extract_tables_and_figures(markdown_path):
     }
 
 
-async def run_summary_stage(output_dir, rag_data):
+async def run_summary_stage(rag_data, llm_config):
     rag_results = rag_data["rag_results"]
-
-    api_key = os.getenv("RAG_LLM_API_KEY")
-    client = OpenAI(api_key=api_key, base_url=os.getenv("RAG_LLM_BASE_URL"))
-    model = os.getenv("LLM_MODEL")
+    client = OpenAI(api_key=llm_config.api_key, base_url=llm_config.base_url)
+    model = llm_config.model
 
     # content = await extract_paper(rag_results, client, model, parallel=True, max_concurrency=5)
-    content = await extract_paper(rag_results, client, model, parallel=False)   # 由于OPENAI的TPM限制，我改为串行处理，避免并发过高导致失败
+    content = await extract_paper(rag_results, client, model, parallel=True, max_concurrency=2)   # 由于OPENAI的TPM限制，我改为串行处理，避免并发过高导致失败
     summary_text = content.to_summary()
 
     all_tables, all_figures = [], []
@@ -246,7 +244,7 @@ async def run_summary_stage(output_dir, rag_data):
         all_figures.extend(origin["figures"])
 
     logging.info(f"    ✅ Extracted {len(all_tables)} tables and {len(all_figures)} figures from all markdown files.")
-    result = {
+    summary_checkpoint = {
         "content_type": rag_data.get("content_type"),
         "content": asdict(content),
         "origin": {
@@ -257,4 +255,4 @@ async def run_summary_stage(output_dir, rag_data):
         "mode": rag_data.get("mode", "normal"),
     }
 
-    return content, summary_text, result
+    return content, summary_text, summary_checkpoint

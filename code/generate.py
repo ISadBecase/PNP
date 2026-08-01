@@ -5,6 +5,9 @@ import tempfile
 from dataclasses import dataclass
 from typing import Optional
 from openai import OpenAI
+import logging
+
+logger = logging.getLogger(__name__)
 
 from prompt.image_generation import (
     FORMAT_POSTER,
@@ -28,8 +31,7 @@ class ProcessedStyle:
     error: Optional[str] = None
 
 
-def process_custom_style(client, user_style, model=None):
-    model = model or os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
+def process_custom_style(client, user_style, model):
     try:
         response = client.chat.completions.create(
             model=model,
@@ -52,22 +54,21 @@ def process_custom_style(client, user_style, model=None):
 
 
 class ImageGenerator:
-    def __init__(
-        self,
-        api_key,
-        base_url,
-        model,
-        provider,
-        response_mime_type,
-    ):
-        self.api_key = api_key
-        self.base_url = base_url
-        self.provider = provider.lower()
-        self.response_mime_type = response_mime_type
-        self.model = model
-        self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+    def __init__(self, image_gen_config, prompt_config):
+        self.prompt_model = prompt_config.model
+        self.prompt_client = OpenAI(
+            api_key=prompt_config.api_key,
+            base_url=prompt_config.base_url,
+        )
 
-    def generate(self, plan_data, output_dir, poster_dir, image_size, image_quality, style="academic", custom_style=None):
+        self.image_model = image_gen_config.model
+        self.image_client = OpenAI(
+            api_key=image_gen_config.api_key,
+            base_url=image_gen_config.base_url,
+        )
+        self.response_mime_type = image_gen_config.response_mime_type
+
+    def generate(self, plan_data, poster_dir, image_size, image_quality, style="academic", custom_style=None):
         plan = plan_data["plan"]
         origin = plan_data["origin"]
         tables_index = {item["id"]: item for item in origin.get("tables", [])}
@@ -79,11 +80,11 @@ class ImageGenerator:
 
         processed_style = None
         if style == "custom" and custom_style:
-            processed_style = process_custom_style(self.client, custom_style)
+            processed_style = self._process_custom_style(custom_style)
             if not processed_style.valid:
                 raise ValueError(f"Invalid custom style: {processed_style.error}")
         prompt = self._build_poster_prompt(style, processed_style, sections_markdown)
-        image_data, mime_type = self._call_openai(prompt, images, image_size, image_quality)
+        image_data, mime_type = self._generate_image(prompt, images, image_size, image_quality)
 
         suffix = {
             "image/png": ".png",
@@ -100,6 +101,13 @@ class ImageGenerator:
             "mime_type": mime_type,
             "num_reference_images": len(images),
         }
+
+    def _process_custom_style(self, user_style):
+        return process_custom_style(
+            client=self.prompt_client,
+            user_style=user_style,
+            model=self.prompt_model,
+        )
 
     @staticmethod
     def _load_referenced_images(plan, figures_index):
@@ -208,20 +216,21 @@ class ImageGenerator:
             if processed_style.decorations:
                 parts.append(f"Decorations: {processed_style.decorations}")
         else:
-            parts.append(POSTER_STYLE_HINTS.get(style_name, POSTER_STYLE_HINTS["academic"]))
+            parts.append(POSTER_STYLE_HINTS.get(style_name))
         parts.append(VISUALIZATION_HINTS)
         parts.append(POSTER_FIGURE_HINT)
         parts.append(f"---\nContent:\n{sections_md}")
         return "\n\n".join(parts)
 
-    def _call_openai(self, prompt, reference_images, image_size, image_quality):
+    def _generate_image(self, prompt, reference_images, image_size, image_quality):
         temporary_paths, image_files = [], []
         try:
             def call():
                 # 有参考图时
                 if image_files:
-                    response = self.client.images.edit(
-                        model=self.model,
+                    logger.info("     ⏳ Editing poster, with reference images")
+                    response = self.image_client.images.edit(
+                        model=self.image_model,
                         image=image_files,
                         prompt=prompt,
                         size=image_size,
@@ -229,8 +238,9 @@ class ImageGenerator:
                     )
                 # 无参考图时
                 else:
-                    response = self.client.images.generate(
-                        model=self.model,
+                    logger.info(f"     ⏳ Generating poster, without reference images")
+                    response = self.image_client.images.generate(
+                        model=self.image_model,
                         prompt=prompt,
                         size=image_size,
                         quality=image_quality,
@@ -264,21 +274,18 @@ class ImageGenerator:
                 except OSError:
                     pass
 
-async def run_generate_stage(output_dir,poster_dir, image_size, image_quality, style="academic", custom_style=None):
-    plan_path = os.path.join(output_dir, "checkpoint_plan.json")
-    if not os.path.isfile(plan_path):
-        raise FileNotFoundError(f"     ❌ 缺少 Poster 规划检查点：{plan_path}")
-    with open(plan_path, "r", encoding="utf-8") as f:
-        plan_data = json.load(f)
-    if not plan_data.get("plan") or not plan_data.get("origin"):
-        raise ValueError("     ❌ checkpoint_plan.json not save plan or origin")
-
-    # TODO: 环境
+async def run_generate_stage(
+    plan_data,
+    poster_dir,
+    image_size,
+    image_quality,
+    image_gen_config,
+    prompt_config,
+    style="academic",
+    custom_style=None,
+):
     generator = ImageGenerator(
-        api_key=os.getenv("IMAGE_GEN_API_KEY"),
-        base_url=os.getenv("IMAGE_GEN_BASE_URL"),
-        model=os.getenv("IMAGE_GEN_MODEL"),
-        provider=os.getenv("IMAGE_GEN_PROVIDER"),
-        response_mime_type=os.getenv("IMAGE_GEN_RESPONSE_MIME_TYPE", "image/png"),
+        image_gen_config=image_gen_config,
+        prompt_config=prompt_config,
     )
-    return generator.generate(plan_data, output_dir, poster_dir, image_size, image_quality, style, custom_style)
+    return generator.generate(plan_data, poster_dir, image_size, image_quality, style, custom_style)

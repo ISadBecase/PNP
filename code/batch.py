@@ -98,4 +98,4 @@ if __name__ == "__main__":
         save_dir="C:\\Users\\Administrator\\Desktop\\kao\\AGENT\\src\\PNP\\test\\2",
     )
     minparser=BatchParser()
-    batch_result = minparser.process_documents_batch(source_dir=args.source_dir,output_dir=args.save_dir)
+    parser_batch_result = minparser.process_documents_batch(source_dir=args.source_dir,output_dir=args.save_dir)

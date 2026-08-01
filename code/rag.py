@@ -75,26 +75,20 @@ def content_to_text(content_list):
 class RAGClient:
     logger = logging.getLogger(__name__)
 
-    def __init__(self, output_dir, context_page_window=1):
+    def __init__(self, output_dir, config, context_page_window=1):
         self.storage_dir = os.path.join(output_dir, "rag_storage")
         self.context_page_window = context_page_window
         self.rag = None
-        self.llm_model = os.getenv("LLM_MODEL")
-        self.api_key = os.getenv("RAG_LLM_API_KEY")
-        self.base_url = os.getenv("RAG_LLM_BASE_URL")
-        self.embedding_model = os.getenv("EMBEDDING_MODEL")
-
-        if self.embedding_model == "text-embedding-3-small":
+        self.config = config
+        if self.config.embedding.model == "text-embedding-3-small":
             self.embedding_dim = 1536   # OpenAI默认1536
             self.embedding_max_tokens = 8192 # OpenAI默认8192
-        elif self.embedding_model == "text-embedding-3-large":
+        elif self.config.embedding.model == "text-embedding-3-large":
             self.embedding_dim = 3072   # OpenAI默认3072
             self.embedding_max_tokens = 8192 # OpenAI默认8192
         else:
-            raise ValueError(f"Unsupported embedding model: {self.embedding_model}")
+            raise ValueError(f"Unsupported embedding model: {self.config.embedding.model}")
 
-        if not self.api_key:
-            raise RuntimeError("Missing RAG_LLM_API_KEY in .env")
         self._vision_model_func = self._create_vision_function()
 
     # LLM for RAG
@@ -102,16 +96,16 @@ class RAGClient:
         async def llm_model_func(prompt, system_prompt=None, history_messages=None, **kwargs):
             return await retry_async(
                 lambda: openai_complete_if_cache(
-                    self.llm_model,
+                    self.config.llm.model,
                     prompt,
                     system_prompt=system_prompt,
                     history_messages=history_messages or [],
-                    api_key=self.api_key,
-                    base_url=self.base_url,
+                    api_key=self.config.llm.api_key,
+                    base_url=self.config.llm.base_url,
                     **kwargs
                 )
             )
-        logging.info(f"     ✅ LLM model Created: {self.llm_model}")
+        logging.info(f"     ✅ LLM model Created: {self.config.llm.model}")
         return llm_model_func
 
     # LightRAG 内部调用的Chat Completions API，而非 Responses API
@@ -133,14 +127,14 @@ class RAGClient:
             ]
             return await retry_async(
                 lambda: openai_complete_if_cache(
-                    self.llm_model,
+                    self.config.vlm.model,
                     "",
                     messages=messages,
-                    api_key=self.api_key,
-                    base_url=self.base_url,
+                    api_key=self.config.vlm.api_key,
+                    base_url=self.config.vlm.base_url,
                 )
             )
-        logging.info(f"     ✅ Vision model Created: {self.llm_model}")
+        logging.info(f"     ✅ Vision model Created: {self.config.vlm.model}")
         return vision_model_func
 
     # 创建文本嵌入函数(包装的OpenAI接口)
@@ -148,16 +142,16 @@ class RAGClient:
         async def embed_func(texts, max_token_size=None):
             return await openai_embed.func(
                 texts,
-                model=self.embedding_model,
-                api_key=self.api_key,
-                base_url=self.base_url,
+                model=self.config.embedding.model,
+                api_key=self.config.embedding.api_key,
+                base_url=self.config.embedding.base_url,
                 max_token_size=max_token_size,
         )
-        logging.info(f"     ✅ Embedding model Created: {self.embedding_model}")
+        logging.info(f"     ✅ Embedding model Created: {self.config.embedding.model}")
         return EmbeddingFunc(
             embedding_dim=self.embedding_dim,
             max_token_size=self.embedding_max_tokens,
-            model_name=self.embedding_model,
+            model_name=self.config.embedding.model,
             func=embed_func,
         )
 
@@ -168,7 +162,7 @@ class RAGClient:
             working_dir=self.storage_dir,
             llm_model_func=self._create_llm_function(),
             embedding_func=self._create_embedding_function(),
-            llm_model_name=self.llm_model,
+            llm_model_name=self.config.llm.model,
         )
         await self.rag.initialize_storages()
         await initialize_pipeline_status()
