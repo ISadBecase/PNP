@@ -10,3 +10,5 @@ __pycache__/
 temp/
 source/
 output/
+docs/
+arxiv_output/

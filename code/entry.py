@@ -11,6 +11,7 @@ import pyfiglet
 from dotenv import load_dotenv
 from rich.console import Console
 
+from arxiv2agent import digest, write_digest
 from batch import BatchParser
 from generate import run_generate_stage
 from plan import run_plan_stage
@@ -68,8 +69,11 @@ def initialize(args):
 
     set_log(args)
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser()
+    parser.add_argument("arxiv_ids", nargs="+", help="one or more arXiv IDs, e.g. 2305.13860 1706.03762")
+    parser.add_argument("--arxiv-output", default=r"D:\kao\PNP\arxiv_output", help="arxiv2agent digest 的父输出目录")
+    parser.add_argument("--include-source", action="store_true", help="Copy source LaTeX files")
     parser.add_argument("--save_dir", type=str, default="D:\\kao\\PNP\\temp")
     parser.add_argument("--source_dir", type=str, default="D:\\kao\\PNP\\source")    # save temp file
     parser.add_argument("--output_dir", type=str, default="D:\\kao\\PNP\\output")    # save final poster
@@ -84,16 +88,38 @@ def parse_args():
     # Custom style must be specified when using the "custom" style
     parser.add_argument("--style", type=str, default="academic", choices=["academic", "custom","doraemon"])
     parser.add_argument("--custom_style", type=str, default=None)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     return args
 
 
+def run_arxiv2agent_stage(args):
+    failures = []
+    for arxiv_id in args.arxiv_ids:
+        try:
+            paper = digest(arxiv_id=arxiv_id)
+            from arxiv2agent._tex import get_default_cache_dir
+            source_folder = str(get_default_cache_dir() / arxiv_id)
+            output_path = write_digest(paper, output_dir=args.arxiv_output, source_folder=source_folder, include_source=args.include_source)
+            print(f"Wrote: {output_path}", file=sys.stderr)
+        except Exception as exc:
+            failures.append(arxiv_id)
+            print(f"FAILED: {arxiv_id} — {exc}", file=sys.stderr)
 
+    if len(args.arxiv_ids) > 1:
+        print(f"Done: {len(args.arxiv_ids) - len(failures)}/{len(args.arxiv_ids)} papers digested.", file=sys.stderr)
+    if failures:
+        print(f"Failed IDs: {' '.join(failures)}", file=sys.stderr)
+    if len(failures) == len(args.arxiv_ids):
+        raise RuntimeError("所有 arXiv ID 均处理失败")
 
 # TODO:生成文件名可能会重叠，需要后续检查
-if __name__ == "__main__":
+def main(argv=None):
+    args = parse_args(argv)
+    run_arxiv2agent_stage(args)
+
+    sys.exit()
+
     start_up()
-    args = parse_args()
     config = load_app_config()
     initialize(args)
     logging.info(" ✅ Finish file path initialization")
@@ -193,3 +219,8 @@ if __name__ == "__main__":
 
 
     asyncio.run(process_agent())
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
