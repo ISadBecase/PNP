@@ -2,7 +2,6 @@ import base64
 import json
 import os
 import re
-from pathlib import Path
 from openai import OpenAI
 
 from prompt.poster_planning import (
@@ -64,14 +63,15 @@ class ContentPlanner:
             ".gif": "image/gif",
         }
         for figure_id, figure in figures_index.items():
-            image_path = Path(figure["path"])
-            if not image_path.is_absolute():
-                image_path = Path(figure["base_path"]) / image_path
+            image_path = figure["path"]
+            if not os.path.isabs(image_path):
+                image_path = os.path.join(figure["base_path"], image_path)
             # 本地差异：源仓库在图片不存在时跳过；图片是本地 Poster 的必需素材，因此立即报错。
-            if not image_path.is_file():
+            if not os.path.isfile(image_path):
                 raise FileNotFoundError(f"Not find image: {image_path}({figure_id})")
             try:
-                image_data = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+                with open(image_path, "rb") as image_file:
+                    image_data = base64.b64encode(image_file.read()).decode("utf-8")
             except OSError as exc:
                 # 本地差异：源仓库在图片读取失败时跳过；本地中断规划以避免生成缺图 Poster。
                 raise RuntimeError(f"Cant read image file format: {image_path}({figure_id})") from exc
@@ -79,7 +79,7 @@ class ContentPlanner:
                 {
                     "id": figure_id,
                     "caption": figure.get("caption", ""),
-                    "mime_type": mime_map.get(image_path.suffix.lower(), "image/jpeg"),
+                    "mime_type": mime_map.get(os.path.splitext(image_path)[1].lower(), "image/jpeg"),
                     "data": image_data,
                 }
             )

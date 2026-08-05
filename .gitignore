@@ -7,8 +7,9 @@ __pycache__/
 *.pth
 *.safetensors
 
-temp/
-source/
+
 output/
 docs/
-arxiv_output/
+design.md
+tests/
+reference/

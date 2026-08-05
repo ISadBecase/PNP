@@ -5,7 +5,6 @@ import base64
 import hashlib
 import os
 from collections import Counter
-from pathlib import Path
 
 from lightrag import LightRAG, QueryParam
 from lightrag.kg.shared_storage import initialize_pipeline_status
@@ -170,9 +169,10 @@ class RAGClient:
 
     @staticmethod
     def _image_to_base64(image_path):
-        if not image_path or not Path(image_path).is_file():
+        if not image_path or not os.path.isfile(image_path):
             raise FileNotFoundError(f" ❌ Image file not found: {image_path}")
-        return base64.b64encode(Path(image_path).read_bytes()).decode("utf-8")
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
 
     # 将图片内容块转换为文本描述，并结合上下文信息
     # MinerU的默认图片输出均为JPG格式

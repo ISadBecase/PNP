@@ -10,7 +10,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 from prompt.image_generation import (
-    FORMAT_POSTER,
     POSTER_COMMON_STYLE_RULES,
     POSTER_FIGURE_HINT,
     POSTER_STYLE_HINTS,
@@ -83,7 +82,9 @@ class ImageGenerator:
             processed_style = self._process_custom_style(custom_style)
             if not processed_style.valid:
                 raise ValueError(f"Invalid custom style: {processed_style.error}")
-        prompt = self._build_poster_prompt(style, processed_style, sections_markdown)
+        prompt = self._build_poster_prompt(
+            style, processed_style, sections_markdown, image_size
+        )
         image_data, mime_type = self._generate_image(prompt, images, image_size, image_quality)
 
         suffix = {
@@ -160,8 +161,22 @@ class ImageGenerator:
             lines = [
                 f"## {section.get('title', 'Untitled Section')}",
                 "",
-                section.get("content", ""),
             ]
+            layout = section.get("layout")
+            if layout:
+                lines.extend(
+                    [
+                        (
+                            "Layout: "
+                            f"x={layout['x'] * 100:.1f}%, "
+                            f"y={layout['y'] * 100:.1f}%, "
+                            f"width={layout['width'] * 100:.1f}%, "
+                            f"height={layout['height'] * 100:.1f}%"
+                        ),
+                        "",
+                    ]
+                )
+            lines.append(section.get("content", ""))
             for reference in section.get("tables"):
                 table_id = reference.get("table_id")
                 if table_id not in tables_index:
@@ -207,8 +222,12 @@ class ImageGenerator:
         return " ".join(parts)
 
     @staticmethod
-    def _build_poster_prompt(style_name, processed_style, sections_md):
-        parts = [FORMAT_POSTER]
+    def _build_poster_prompt(style_name, processed_style, sections_md, image_size):
+        parts = [
+            f"Create one academic poster at the exact canvas {image_size}. "
+            "Follow every section's normalized layout coordinates; do not replace "
+            "them with a generic equal-column layout. Keep readable whitespace."
+        ]
         if style_name == "custom" and processed_style:
             parts.append(
                 f"Style: {ImageGenerator._format_custom_style_for_poster(processed_style)}"
