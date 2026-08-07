@@ -1,0 +1,31 @@
+method/algorithm:
+  section_guidance: |
+    Prioritize presenting the research question, limitations of existing methods, overview of the method, key components, technical process,
+    main results, ablation studies, and contributions. The proposed method should be allocated the most content space.
+  asset_guidance: |
+    The methods section should primarily use architecture diagrams and workflow charts, core formulas for technical components,
+    and comparison tables or ablation study tables for the results section.
+
+theory/analysis:
+  section_guidance: |
+    Prioritize presenting the problem setting, assumptions, definitions, core claims, representative analysis or proof ideas,
+    implications, and limitations.
+  asset_guidance: |
+    Preferably use representative formulas that reflect definitions and claims, and conceptual diagrams that explain mechanisms;
+    tables should only be used when they support core theories or empirical comparisons.
+
+problem definition/evaluation:
+  section_guidance: |
+    Prioritize presenting task definitions, dataset or benchmark construction, evaluation protocols, metrics, baseline methods,
+    main findings, and limitations.
+  asset_guidance: |
+    Preferably use dataset overview diagrams, benchmark testing diagrams, formulas defining metrics,
+    and main comparison tables containing decisive results.
+
+application/trustworthiness:
+  section_guidance: |
+    Prioritize presenting practical issues, application scenarios, relevant stakeholders, system workflows, reliability or risk analysis,
+    evaluations, limitations, and broader impacts.
+  asset_guidance: |
+    Preferably use application workflow diagrams, qualitative examples, safety or reliability analyses, and result tables.
+    Formulas should only be chosen when they are critical to mechanisms or evaluations.

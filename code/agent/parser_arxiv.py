@@ -12,6 +12,83 @@ from tempfile import TemporaryDirectory
 def _replace_suffix(path, suffix):
     return os.path.splitext(path)[0] + suffix
 
+# 去除表格背景tex设置
+def strip_table_backgrounds(source):
+    commands = re.compile(
+        r"\\(rowcolors\*?|rowcolor|cellcolor|colorbox|fcolorbox)(?![A-Za-z@])"
+    )
+
+    def read_group(position, opening, closing):
+        while position < len(source) and source[position].isspace():
+            position += 1
+        if position >= len(source) or source[position] != opening:
+            return None
+
+        depth = 1
+        start = position + 1
+        position += 1
+        while position < len(source):
+            character = source[position]
+            escaped = position > 0 and source[position - 1] == "\\"
+            if not escaped and character == opening:
+                depth += 1
+            elif not escaped and character == closing:
+                depth -= 1
+                if depth == 0:
+                    return source[start:position], position + 1
+            position += 1
+        return None
+
+    output = []
+    cursor = 0
+    for match in commands.finditer(source):
+        if match.start() < cursor:
+            continue
+
+        command = match.group(1)
+        position = match.end()
+        optional = read_group(position, "[", "]")
+        if optional:
+            position = optional[1]
+
+        argument_count = {
+            "rowcolor": 1,
+            "cellcolor": 1,
+            "rowcolors": 3,
+            "rowcolors*": 3,
+            "colorbox": 2,
+            "fcolorbox": 3,
+        }[command]
+        arguments = []
+        valid = True
+        for _ in range(argument_count):
+            group = read_group(position, "{", "}")
+            if not group:
+                valid = False
+                break
+            arguments.append(group[0])
+            position = group[1]
+
+        if not valid:
+            continue
+
+        if command in ("rowcolor", "cellcolor"):
+            for _ in range(2):
+                overhang = read_group(position, "[", "]")
+                if not overhang or "&" in overhang[0] or "\\\\" in overhang[0]:
+                    break
+                position = overhang[1]
+
+        output.append(source[cursor:match.start()])
+        if command == "colorbox":
+            output.append(arguments[1])
+        elif command == "fcolorbox":
+            output.append(arguments[2])
+        cursor = position
+
+    output.append(source[cursor:])
+    return "".join(output)
+
 
 def collect_tex_fragments(root):
     fragments = []
@@ -38,7 +115,7 @@ def find_source_preamble(tex_path):
     return None, ""
 
 
-def convert_fragment(tex_path, dpi=600, background="transparent", force=False):
+def convert_fragment(tex_path, dpi=600, background="white", force=True):
     tex_path = os.fspath(tex_path)
     pdf_path = os.path.abspath(_replace_suffix(tex_path, ".pdf"))
     png_path = os.path.abspath(_replace_suffix(tex_path, ".png"))
@@ -56,11 +133,12 @@ def convert_fragment(tex_path, dpi=600, background="transparent", force=False):
                     env = json.load(json_file).get("env", "")
             else:
                 env = ""
-            if env == "align":
+            if env in ("align", "align*"):
                 body = f"$\\begin{{aligned}}\n{source}\n\\end{{aligned}}$\n"
             else:
                 body = f"$\\displaystyle {source}$\n"
         else:
+            source = strip_table_backgrounds(source)
             body = f"{{\\centering\n{source}\n\\par}}\n"
 
         workdir, preamble = find_source_preamble(tex_path)
@@ -96,6 +174,8 @@ def convert_fragment(tex_path, dpi=600, background="transparent", force=False):
                 cwd=workdir or temp_dir,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             if result.returncode:
                 return tex_path, "failed", (result.stderr or result.stdout or "")[-1000:]
@@ -110,6 +190,8 @@ def convert_fragment(tex_path, dpi=600, background="transparent", force=False):
                 cwd=os.path.dirname(tex_path),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             if result.returncode:
                 return tex_path, "failed", (result.stderr or result.stdout or "")[-1000:]
@@ -119,7 +201,7 @@ def convert_fragment(tex_path, dpi=600, background="transparent", force=False):
     return tex_path, "rendered", ""
 
 
-def convert_root(root, dpi=600, workers=4, background="transparent", force=False):
+def convert_root(args, dpi=600, workers=4, background="white", force=True):
     def render(tex_path):
         try:
             return convert_fragment(tex_path, dpi, background, force)
@@ -127,11 +209,12 @@ def convert_root(root, dpi=600, workers=4, background="transparent", force=False
             return tex_path, "failed", str(error)
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        return list(executor.map(render, collect_tex_fragments(os.fspath(root))))
+        return list(executor.map(render, collect_tex_fragments(os.path.join(args.output_dir, "arxiv"))))
 
 
-def convert_figure_pdfs(root, dpi=300, workers=4, force=False):
-    pdf_paths = sorted(glob.glob(os.path.join(os.fspath(root), "*", "figures", "*.pdf")))
+def convert_figure_pdfs(args, dpi=300, workers=4, force=True):
+    arxiv_dir=os.path.join(args.output_dir, "arxiv")
+    pdf_paths = sorted(glob.glob(os.path.join(os.fspath(arxiv_dir), "*", "figures", "*.pdf")))
 
     def render(pdf_path):
         png_path = os.path.abspath(_replace_suffix(pdf_path, ".png"))
@@ -142,6 +225,7 @@ def convert_figure_pdfs(root, dpi=300, workers=4, force=False):
                 "pdftocairo",
                 "-png",
                 "-singlefile",
+                "-cropbox",
                 "-r",
                 str(dpi),
                 os.path.abspath(pdf_path),
@@ -150,6 +234,8 @@ def convert_figure_pdfs(root, dpi=300, workers=4, force=False):
             cwd=os.path.dirname(pdf_path),
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode:
             return pdf_path, "failed", (result.stderr or result.stdout or "")[-1000:]

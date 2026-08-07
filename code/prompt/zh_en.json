@@ -1,0 +1,7 @@
+{
+  "equation_analyzer.yaml": "4927a339784d5ade11c81c7bdfa3d11bd73fce2d26ac2851f8e7705a5f01bb35",
+  "paper_classifier.yaml": "662a4631a9c99d122d89e6d2a190135954bf1996be80b737c00c987d81a0e61f",
+  "paper_type_guidance.yaml": "ac447921d5517092625e7dd5ccc282b9396f017e6fd6eb3c706cd4145671b75e",
+  "poster_asset_planner.yaml": "7faf8a2a283a96652953af9aaced40978e454aeecaf5f6139e4a821e08600193",
+  "poster_section_planner.yaml": "498ae0fdec14bac50e4ad0f42d63f55b0b9aa779bf5de8f8ee3bea96f2b3e8b1"
+}
