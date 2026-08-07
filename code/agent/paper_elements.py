@@ -1,6 +1,9 @@
 import json
 import os
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 def clean_ref(text):
     return re.sub(
@@ -28,7 +31,7 @@ def extract_contents(args):
 
         equations_json = os.path.join(temp_dir, "equations.json")
         extract_equations(paper_json, equations_json)
-        print("Extraction complete for:", paper_id)
+        logger.info(f" ✅ Extraction complete for: {paper_id}")
 
 def extract_sections(paper_json, sections_json):
     with open(paper_json, "r", encoding="utf-8") as file:
@@ -68,6 +71,7 @@ def extract_figures(paper_json, figures_json):
             {
                 "id": figure.get("id", ""),
                 "caption": figure.get("caption", ""),
+                "description": "",
                 "defined_in": figure.get("defined_in", ""),
                 "is_appendix": figure.get("is_appendix", False),
                 "png_path": os.path.normpath(os.path.join(paper_dir, png_file)),
@@ -92,6 +96,7 @@ def extract_tables(paper_json, tables_json):
             {
                 "id": table.get("id", ""),
                 "caption": table.get("caption", ""),
+                "description": "",
                 "raw_tex": table.get("raw_tex", ""),
                 "defined_in": table.get("defined_in", ""),
                 "is_appendix": table.get("is_appendix", False),

@@ -1,10 +1,13 @@
 import hashlib
 import json
 import os
+import logging
 
 from camel.agents import ChatAgent
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType
+
+logger = logging.getLogger(__name__)
 
 # 哈希编码+文件内容同步(中->英)
 def sync_english_prompts(app_config):
@@ -50,6 +53,7 @@ def sync_english_prompts(app_config):
     agent = ChatAgent(system_message=system_prompt, model=model)
     translated = []
 
+    logger.info(" 🚀 开始翻译英文提示词...")
     for filename, zh_file, en_file, file_hash in changed:
         with open(zh_file, "r", encoding="utf-8") as file:
             content = file.read()
@@ -72,5 +76,6 @@ def sync_english_prompts(app_config):
         with open(json_file, "w", encoding="utf-8") as file:
             json.dump(hashes, file, ensure_ascii=False, indent=2)
         translated.append(filename)
+        logger.info(f" ✅ 成功翻译文件: {filename}")
 
     return translated

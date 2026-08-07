@@ -3,5 +3,7 @@
   "paper_classifier.yaml": "662a4631a9c99d122d89e6d2a190135954bf1996be80b737c00c987d81a0e61f",
   "paper_type_guidance.yaml": "ac447921d5517092625e7dd5ccc282b9396f017e6fd6eb3c706cd4145671b75e",
   "poster_asset_planner.yaml": "7faf8a2a283a96652953af9aaced40978e454aeecaf5f6139e4a821e08600193",
-  "poster_section_planner.yaml": "498ae0fdec14bac50e4ad0f42d63f55b0b9aa779bf5de8f8ee3bea96f2b3e8b1"
+  "poster_section_planner.yaml": "498ae0fdec14bac50e4ad0f42d63f55b0b9aa779bf5de8f8ee3bea96f2b3e8b1",
+  "figure_analyzer.yaml": "d88511b5d89080474d6aca65c87b6c28a2f78ebdc8b119989beb7900eb26c5a4",
+  "table_analyzer.yaml": "2b7000dec3ca5d841ec938da83136fbb3ccbbfa56aa784f37e55f773f9ce1e91"
 }
