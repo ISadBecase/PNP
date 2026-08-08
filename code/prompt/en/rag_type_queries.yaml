@@ -1,0 +1,55 @@
+"Method/Algorithm":
+  solution:
+    - What is the complete algorithm flow, key modules, and data flow of the paper?
+    - What objective functions, optimization strategies, training processes, or inference mechanisms constitute the core of the method?
+  results:
+    - What experiments validate the effectiveness of the core modules and key design choices?
+  figures:
+    - What combinations of images most clearly explain the method architecture, data flow, and core mechanisms?
+  tables:
+    - What combinations of tables most powerfully demonstrate the overall performance of the method and the effectiveness of each component?
+  equations:
+    - What formulas should be combined to fully express the core algorithm, objective functions, or optimization processes?
+
+"Theory/Analysis":
+  solution:
+    - What definitions, assumptions, theoretical claims, derivations, or analytical frameworks does the paper use?
+    - What are the conditions under which the core theoretical conclusions hold, and what is their explanatory significance?
+  results:
+    - What theoretical, empirical, or explanatory evidence supports the core claims of the paper?
+  figures:
+    - What combinations of images most intuitively present key phenomena, mechanisms, or theoretical relationships?
+  tables:
+    - What combinations of tables provide decisive evidence for the core theoretical conclusions or empirical analyses?
+  equations:
+    - What definitions, theorems, or derivation formulas should be combined to express the theoretical innovations of the paper?
+
+"Benchmark/Evaluation":
+  solution:
+    - How does the paper define the task, dataset, evaluation protocols, metrics, or benchmarks?
+    - What are the key steps in data construction, annotation, partitioning, metric design, or baseline selection?
+  results:
+    - What results demonstrate the value and distinctiveness of the new tasks, datasets, metrics, or evaluation protocols?
+  figures:
+    - What combinations of images most intuitively display the task definition, data characteristics, sample distribution, or evaluation process?
+  tables:
+    - What combinations of tables most clearly summarize data statistics, benchmark results, and key comparisons?
+  equations:
+    - What formulas define the core metrics, task objectives, or evaluation methods that are worth showcasing in the poster?
+
+"Survey / Review":
+  motivation:
+    - Why is this review needed in the field, and what scattered, chaotic, or unresolved issues exist in the current knowledge or research directions?
+  solution:
+    - What literature scope, selection methods, classification systems, or organizational frameworks does the paper adopt?
+    - On what key dimensions does the paper compare existing methods, and what are the main features and differences of various methods?
+  results:
+    - What major trends, consensus, controversies, research gaps, and future directions does the review identify?
+  contributions:
+    - What unique value do the classification system, unified perspective, or research agenda proposed by the paper have?
+  figures:
+    - What combinations of images most clearly display the panoramic view of the field, method classifications, development context, or unified framework?
+  tables:
+    - What combinations of tables are most suitable for comparing the capabilities, applicable scenarios, advantages, and limitations of different method categories?
+  equations:
+    - What formulas are representative across methods and can help explain the classification dimensions or core technical differences in the review?

@@ -11,15 +11,20 @@ system_prompt: |
   2. Theory/Analysis
     - The paper reveals and proves a certain phenomenon and explains the significance of studying this phenomenon.
     - The paper systematically analyzes and explains the principles of a certain method or phenomenon, providing interpretability.
-    - The paper derives certain generalizable conclusions and theorems through theoretical deduction or empirical analysis.
+    - The paper derives certain general conclusions and theorems through theoretical deduction or empirical analysis.
 
   3. Benchmark/Evaluation
-    - The paper proposes new evaluation metrics, new testing tasks, datasets, or benchmarks, protocols;
+    - The paper proposes new evaluation metrics, new testing tasks, datasets, or benchmarks, and protocols.
     - The paper evaluates the rationality and reliability of its new evaluation standards.
+
+  4. Survey / Review
+    - The paper systematically reviews and summarizes the current state of research in a certain field.
+    - The paper evaluates the advantages and disadvantages of various existing methods and proposes improvement suggestions.
+    - The explanation of existing methods occupies more than half of the full text.
 
   Requirements for the response:
     - Return at most two judgment categories based on content relevance.
-    - If the judgment result includes two types, organize the results in order of contribution degree from high to low.
+    - If the judgment result includes two types, organize the results according to the priority of contribution from high to low.
     - Provide judgment reasons for each judgment result category based on the paper content and type judgment criteria.
 
   Requirements for the response format:
@@ -53,7 +58,7 @@ template: |
           "Judgment reason for category keyword 2"
         ]
       }
-    - The categories field must contain strings selected from the following categories: Method/Algorithm, Theory/Analysis, Problem Definition/Evaluation
+    - The strings in the categories field must be selected from the following categories: Method/Algorithm, Theory/Analysis, Benchmark/Evaluation, Survey / Review
     - The number of entries in category_reasons must match the number of categories.
 
 jinja_args:

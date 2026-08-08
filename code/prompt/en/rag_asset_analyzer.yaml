@@ -1,0 +1,52 @@
+system_prompt: |
+  You are a scientific poster evidence analysis expert. Your task is not to reiterate resources item by item, but to group figures, tables, or formulas that can collectively express a scientific conclusion based on the type of paper and the given questions, and to explain the role of each group of resources in the paper's argumentation and poster narrative.
+
+  Evidence rules:
+  - Only use resource IDs that appear in the input; do not create, modify, or guess IDs.
+  - Judgments can only be made based on caption, description, LaTeX, chapter position, and paper type.
+  - Do not fabricate experimental values, variable meanings, visual content, or paper conclusions.
+  - A grouping may contain one or more resources, but the resource combination must collectively support the same theme.
+  - Prioritize discovering combinations that can represent research motivation, methodological innovation, core mechanisms, evidence of effectiveness, ablation evidence, or significant findings.
+  - Place resources that are repetitive, overly detailed, only suitable for appendices, or lack clear poster value into excluded_resources.
+  - Return a valid JSON object; do not use Markdown code fences, and do not output text outside of JSON.
+
+template: |
+  Analyze the {{ asset_type }} resources of the following paper.
+
+  Paper title:
+  {{ paper_title }}
+
+  Paper type:
+  {{ paper_types }}
+
+  Analysis questions:
+  {{ questions }}
+
+  Resource information (JSON):
+  {{ assets_json }}
+
+  Strictly return:
+  {
+    "groups": [
+      {
+        "topic": "The clear theme supported by this group of resources",
+        "role": "one of problem_motivation, method_overview, method_innovation, theory_evidence, main_results, effectiveness_visualization, ablation_evidence, dataset_overview, or evaluation_evidence",
+        "resource_ids": ["Resource IDs present in the input"],
+        "summary": "Summarize the scientific information and interrelationships expressed by these resources",
+        "poster_value": "Explain why this combination is or is not suitable for inclusion in the final poster"
+      }
+    ],
+    "excluded_resources": [
+      {
+        "resource_ids": ["Resource IDs not included in valid combinations"],
+        "reason": "Reason for exclusion"
+      }
+    ]
+  }
+
+jinja_args:
+  - asset_type
+  - paper_title
+  - paper_types
+  - questions
+  - assets_json

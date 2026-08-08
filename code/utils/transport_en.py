@@ -39,7 +39,8 @@ def sync_english_prompts(app_config):
     system_prompt = """你是一名专业的提示词本地化翻译助手。
     请将所提供的中文提示词翻译成准确、结构对齐的英文提示词。完整保留文件的结构和格式。
     不要翻译 YAML 或 JSON 键、文件名、诸如{{ variable }} 的 Jinja 表达式、格式占位符、标识符、枚举值、JSON 示例、代码、LaTeX 或 Markdown 语法。仅翻译中文自然语言指令和注释。
-    输入信息格式为{Filename: {filename}\n\nFile content:\n{content}}，无额外指令;要求只返回完整的{{content}}的翻译后内容。
+    输入信息格式为 Filename: {filename}\n\nFile content:\n{content} ，无额外指令;
+    严格返回完整的{{content}}的翻译后内容,返回结果不包含 Filename: {filename}\n\nFile content:\n;
     不要使用 Markdown 代码围栏，也不要添加额外的说明。
     """
 

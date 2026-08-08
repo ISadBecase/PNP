@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 import os
 import shutil
@@ -11,7 +12,8 @@ import agent.parser_arxiv as parser_arxiv
 from agent.paper_classifier import classify_papers,extract_main_content
 from agent.parser_vlm import analyze_equations,analyze_figures,analyze_tables
 from agent.paper_elements import extract_contents
-from agent.rag import create_content_list
+from agent.rag import analyze_asset_categories,build_rag_database,create_content_list,query_rag_categories
+from agent.summary import summarize_papers
 
 
 def set_log(args):
@@ -20,12 +22,13 @@ def set_log(args):
     root_logger.handlers.clear()
 
     formatter = logging.Formatter(
-        fmt="%(asctime)s | %(name)-16s | %(levelname)-7s | %(message)s",
+        fmt="%(asctime)s | %(name)-24s | %(levelname)-7s | %(message)s",
         datefmt="%m-%d %H:%M:%S",
     )
 
     file_handler = logging.FileHandler(
         os.path.join(args.output_dir, "run.log"),
+        mode="w",
         encoding="utf-8",
     )
     file_handler.setLevel(logging.INFO)
@@ -45,29 +48,6 @@ def set_log(args):
     logging.getLogger("PIL").setLevel(logging.WARNING)
 
     return logging.getLogger("entry")
-
-
-STAGES=["start","render","extract","classify","equation_vlm","figure_vlm","table_vlm","rag"]
-
-def parse_args(argv=None):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("arxiv_ids", nargs="+", help="one or more arXiv IDs, e.g. 2305.13860 1706.03762")
-    parser.add_argument("--output_dir", default="./output", help="Output Directory")
-    parser.add_argument("--stage",default="rag",choices=STAGES)
-
-    parser.add_argument("--poster_density", type=str, default="dense", choices=["sparse", "medium", "dense"])
-    # For gpt-image-2 and gpt-image-2-2026-04-21, arbitrary resolutions are supported as WIDTHxHEIGHT strings.
-    # Width and height must both be divisible by 16 and the requested aspect ratio must be between 1:3 and 3:1.
-    # Resolutions above 2560x1440 are experimental, and the maximum supported resolution is 3840x2160
-    parser.add_argument("--image_size", type=str, default="3840x2160")
-    parser.add_argument("--image_quality", type=str, default="high", choices=["low", "medium", "high"])
-
-    # Custom style must be specified when using the "custom" style
-    parser.add_argument("--style", type=str, default="academic", choices=["academic", "custom","doraemon"])
-    parser.add_argument("--custom_style", type=str, default=None)
-    args = parser.parse_args(argv)
-    return args
-
 
 def run_arxiv2agent_stage(args,logger):
     arxiv_dir = os.path.join(args.output_dir, "arxiv")
@@ -89,6 +69,31 @@ def run_arxiv2agent_stage(args,logger):
         logger.info(f"    ❌ Failed IDs: {' '.join(failures)}")
     if len(failures) == len(args.arxiv_ids):
         raise RuntimeError("All arXiv ID processing failed")
+
+
+STAGES = ["start","render","extract","classify","equation_vlm","figure_vlm","table_vlm","rag_content","rag_build","rag_query","asset_query","summary",]
+RAG_QUERY_CATEGORIES = ["motivation", "solution", "results", "contributions"]
+ASSET_QUERY_CATEGORIES = ["figures", "tables", "equations"]
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("arxiv_ids", nargs="+", help="one or more arXiv IDs, e.g. 2305.13860 1706.03762")
+    parser.add_argument("--output_dir", default="./output", help="Output Directory")
+    parser.add_argument("--stage", default="rag_query", choices=STAGES)
+
+    parser.add_argument("--poster_density", type=str, default="dense", choices=["sparse", "medium", "dense"])
+    # For gpt-image-2 and gpt-image-2-2026-04-21, arbitrary resolutions are supported as WIDTHxHEIGHT strings.
+    # Width and height must both be divisible by 16 and the requested aspect ratio must be between 1:3 and 3:1.
+    # Resolutions above 2560x1440 are experimental, and the maximum supported resolution is 3840x2160
+    parser.add_argument("--image_size", type=str, default="3840x2160")
+    parser.add_argument("--image_quality", type=str, default="high", choices=["low", "medium", "high"])
+
+    # Custom style must be specified when using the "custom" style
+    parser.add_argument("--style", type=str, default="academic", choices=["academic", "custom","doraemon"])
+    parser.add_argument("--custom_style", type=str, default=None)
+    args = parser.parse_args(argv)
+    return args
+
 
 # & "D:\Anaconda3\envs\Pytorch\python.exe" .\code\entry.py 2402.17228
 def main():
@@ -117,27 +122,27 @@ def main():
     start_stage = STAGES.index(args.stage)
 
     if start_stage <= STAGES.index("start"):
-        logger.info(" 🚀 [1/8] Start arXiv parsing")
+        logger.info(" 🚀 [1/12] Start arXiv parsing")
         run_arxiv2agent_stage(args,logger)
 
     # Convert Figures PDFs & Equations Latex to PNG
     if start_stage <= STAGES.index("render"):
-        logger.info(" 🚀 [2/8] Start LaTeX rendering")
+        logger.info(" 🚀 [2/12] Start LaTeX rendering")
         render_results = parser_arxiv.convert_root(args)
         failed = sum(result[1] == "failed" for result in render_results)
-        logger.info("LaTeX fragments: %d processed, %d failed", len(render_results), failed)
+        logger.info(f" ✅ LaTeX fragments: {len(render_results)} processed, {failed} failed")
         figure_results = parser_arxiv.convert_figure_pdfs(args)
         figure_failed = sum(result[1] == "failed" for result in figure_results)
-        logger.info("Figure PDFs: %d processed, %d failed", len(figure_results), figure_failed)
+        logger.info(f" ✅ Figure PDFs: {len(figure_results)} processed, {figure_failed} failed")
 
     # 重炼论文资源
     if start_stage <= STAGES.index("extract"):
-        logger.info(" 🚀 [3/8] Start paper element extraction")
+        logger.info(" 🚀 [3/12] Start paper element extraction")
         extract_contents(args)
 
     # 提取主要内容(Title、Abstract、Introduction、Conclusion)->论文类型判断
     if start_stage <= STAGES.index("classify"):
-        logger.info(" 🚀 [4/8] Start paper classification")
+        logger.info(" 🚀 [4/12] Start paper classification")
         extract_main_content(args)
         classification_results, classification_usage = classify_papers(app_config, args)
         for paper_id, result in classification_results.items():
@@ -151,7 +156,7 @@ def main():
 
     # 为论文公式添加VLM分析
     if start_stage <= STAGES.index("equation_vlm"):
-        logger.info(" 🚀 [5/8] Start equation analysis")
+        logger.info(" 🚀 [5/12] Start equation analysis")
         equation_usage = analyze_equations(app_config, args)
         logger.info(
             " ✅ Equation VLM tokens | input=%d output=%d total=%d",
@@ -162,7 +167,7 @@ def main():
 
     # 为论文图片添加VLM分析
     if start_stage <= STAGES.index("figure_vlm"):
-        logger.info(" 🚀 [6/8] Start figure analysis")
+        logger.info(" 🚀 [6/12] Start figure analysis")
         figure_usage = analyze_figures(app_config, args)
         logger.info(
             " ✅ Figure VLM tokens | input=%d output=%d total=%d",
@@ -173,7 +178,7 @@ def main():
 
     # 为论文表格添加VLM分析
     if start_stage <= STAGES.index("table_vlm"):
-        logger.info(" 🚀 [7/8] Start table analysis")
+        logger.info(" 🚀 [7/12] Start table analysis")
         table_usage = analyze_tables(app_config, args)
         logger.info(
             " ✅ Table VLM tokens | input=%d output=%d total=%d",
@@ -182,11 +187,53 @@ def main():
             table_usage["total_tokens"],
         )
 
-    # RAG
-    if start_stage <= STAGES.index("rag"):
-        logger.info(" 🚀 [8/8] Start RAG content construction")
-        create_content_list(args)
-        logger.info(" ✅ RAG content list created")
+    # RAG Build Resources
+    if start_stage <= STAGES.index("rag_content"):
+        logger.info(" 🚀 [8/12] Start RAG content construction")
+        results = create_content_list(args)
+        logger.info(f" ✅ RAG content list created : {', '.join(list(results.keys()))}")
+
+    async def run_rag_stages(app_config, args, start_stage, logger):
+        if start_stage <= STAGES.index("rag_build"):
+            logger.info(" 🚀 [9/12] Start LightRAG database construction")
+            results = await build_rag_database(app_config, args)
+            logger.info(" ✅ LightRAG databases created: %s", ", ".join(results))
+
+        if start_stage <= STAGES.index("rag_query"):
+            logger.info(" 🚀 [10/12] Start categorized RAG queries")
+            results = await query_rag_categories(
+                app_config, args, RAG_QUERY_CATEGORIES
+            )
+            logger.info(" ✅ Raw query results created: %s", ", ".join(results))
+
+    # RAG Main Content Query
+    if start_stage <= STAGES.index("rag_query"):
+        asyncio.run(run_rag_stages(app_config, args, start_stage, logger))
+
+    # RAG Asset Query (Figures & Tables & Equations)
+    if start_stage <= STAGES.index("asset_query"):
+        logger.info(" 🚀 [11/12] Start figure, table and equation analysis")
+        results, usage = analyze_asset_categories(
+            app_config, args, ASSET_QUERY_CATEGORIES
+        )
+        logger.info(" ✅ Asset query results updated: %s", ", ".join(results))
+        logger.info(
+            " ✅ Asset query tokens | input=%d output=%d total=%d",
+            usage["prompt_tokens"],
+            usage["completion_tokens"],
+            usage["total_tokens"],
+        )
+
+    if start_stage <= STAGES.index("summary"):
+        logger.info(" 🚀 [12/12] Start poster evidence summary")
+        results, usage = summarize_papers(app_config, args)
+        logger.info(" ✅ Poster evidence created: %s", ", ".join(results))
+        logger.info(
+            " ✅ Summary tokens | input=%d output=%d total=%d",
+            usage["prompt_tokens"],
+            usage["completion_tokens"],
+            usage["total_tokens"],
+        )
 
     return
 

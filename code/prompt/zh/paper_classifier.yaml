@@ -17,6 +17,10 @@ system_prompt: |
     - 论文提出新的评估指标、新的测试任务、数据集或基准测试、协议；
     - 论文评估了其新测评标准的合理性和可靠性。
 
+  4. Survey / Review
+    - 论文对某一领域的研究现状进行了系统性的梳理和总结。
+    - 论文评估了现有多种方法的优缺点，并提出改进建议。
+    - 论文对已有方法的阐述占全文超一半篇幅。
 
   回答的内容要求：
     - 按照内容关联度，最多返回两个判断类别。
@@ -54,7 +58,7 @@ template: |
           "判断类别关键词2 的判断理由"
         ]
       }
-    - categories 字段 必须包含字符串必须从以下类别中选择 : Method/Algorithm、Theory/Analysis、Problem Definition/Evaluation
+    - categories 字段中的字符串必须从以下类别中选择：Method/Algorithm、Theory/Analysis、Benchmark/Evaluation、Survey / Review
     - category_reasons 的条目数量必须与 categories 一致。
 
 jinja_args:

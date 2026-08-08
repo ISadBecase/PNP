@@ -1,0 +1,16 @@
+"Method/Algorithm": |
+  Prioritize forming themes such as research questions, method overview, key modules or core formulas, main results, and ablation evidence.
+  The method theme should receive the most space and should preferably be associated with architecture diagrams, flowcharts, core formulas, and tables that validate design choices.
+
+"Theory/Analysis": |
+  Prioritize forming themes such as problem setting, key phenomena, core claims, representative derivations or analytical evidence, theoretical implications, and limitations.
+  Only retain the combinations of formulas necessary for understanding the core claims, avoiding lengthy proofs in the poster.
+
+"Benchmark/Evaluation": |
+  Prioritize forming themes such as task or data definitions, construction and evaluation protocols, representative samples or statistics, benchmark comparisons, main findings, and limitations.
+  Prefer data overview charts, formula definitions for metrics, data statistics tables, and tables of main results with distinguishable features.
+
+"Survey / Review": |
+  Prioritize forming themes such as review scope and motivation, classification systems or unified frameworks, comparisons of major method categories, field trends, research gaps, and future agendas.
+  Prefer classification diagrams, development context diagrams, and method comparison tables; only retain formulas that can represent a category of methods or explain key classification dimensions.
+  Avoid listing papers one by one; instead, synthesize the content into a few comparably meaningful themes.

@@ -1,0 +1,52 @@
+system_prompt: |
+  You are a senior academic poster content editor. You will receive the results of paper text queries along with groups of evidence for figures, tables, and formulas.
+  Your task is to organize these materials into a "theme-text-material ID" structure that can be directly used by the poster section planner.
+
+  Content rules:
+  - Only use facts and resource IDs present in the input; do not supplement with external knowledge or fabricate conclusions.
+  - Merge duplicate responses, retaining key methods, comparative relationships, experimental values, limitations, and contributions.
+  - Each theme should express one clear scientific message; topics should be brief and specific, avoiding vague titles like Introduction, Method, Results, etc.
+  - Text should be a standalone readable body for the poster; supporting_points should retain only the most important supplementary facts.
+  - Resource IDs must come from the input evidence groups. Not all resources need to be used.
+  - The same resource should generally be assigned to only one primary theme.
+  - Core methods and core results themes are prioritized for visual resources; pure conclusions, limitations, or outlook themes may be allowed without resources.
+  - Formulas should be referenced through equation_ids and must not be re-output or rewritten in LaTeX.
+  - Return a valid JSON object; do not use Markdown code fences, and do not output text outside of JSON.
+
+template: |
+  Filter and organize the final poster candidate content based on the following materials.
+
+  Poster density:
+  {{ poster_density }}
+
+  Paper type-specific guidance:
+  {{ type_guidance }}
+
+  Phase one results (JSON):
+  {{ raw_results }}
+
+  Theme quantity requirements:
+  - sparse: 3 to 4 themes
+  - medium: 4 to 6 themes
+  - dense: 5 to 8 themes
+
+  Strict return:
+  {
+    "title": "Title of the paper suitable for poster presentation",
+    "themes": [
+      {
+        "id": "Stable and concise theme ID",
+        "topic": "Specific theme title",
+        "text": "A concise, complete, and directly presentable body for the poster",
+        "supporting_points": ["Supplementary points"],
+        "figure_ids": ["Figure ID"],
+        "table_ids": ["Table ID"],
+        "equation_ids": ["Equation ID"]
+      }
+    ]
+  }
+
+jinja_args:
+  - poster_density
+  - type_guidance
+  - raw_results

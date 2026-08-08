@@ -1,16 +1,17 @@
 .vscode
 .idea
 .env
+.pytest_cache/
 
 __pycache__/
 
 *.pth
 *.safetensors
 
-
-output/
-docs/
 design.md
-tests/
 reference/
+output/
 
+docs/
+tests/
+temp/

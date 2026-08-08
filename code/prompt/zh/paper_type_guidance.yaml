@@ -14,13 +14,21 @@ theory/analysis:
     优先使用体现定义和主张的代表性公式、解释机制的概念图；
     仅当表格支持核心理论或实证比较时才使用表格。
 
-problem definition/evaluation:
+benchmark/evaluation:
   section_guidance: |
     应优先呈现任务定义、数据集或基准构建、评估协议、指标、基线方法、
     主要发现和局限性。
   asset_guidance: |
     应优先使用数据集概览图、基准测试图、定义指标的公式，
     以及包含决定性结果的主要对比表。
+
+survey / review:
+  section_guidance: |
+    应优先呈现综述范围和动机、文献筛选或组织方法、分类体系、主要方法类别、
+    横向比较、领域趋势、研究空白和未来方向，避免逐篇论文罗列。
+  asset_guidance: |
+    优先使用领域全景图、分类体系图、发展脉络图和跨方法对比表；
+    仅当公式能够代表一类方法或解释关键分类维度时才选择公式。
 
 application/trustworthiness:
   section_guidance: |

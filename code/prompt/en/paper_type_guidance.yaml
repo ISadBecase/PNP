@@ -14,13 +14,21 @@ theory/analysis:
     Preferably use representative formulas that reflect definitions and claims, and conceptual diagrams that explain mechanisms;
     tables should only be used when they support core theories or empirical comparisons.
 
-problem definition/evaluation:
+benchmark/evaluation:
   section_guidance: |
     Prioritize presenting task definitions, dataset or benchmark construction, evaluation protocols, metrics, baseline methods,
     main findings, and limitations.
   asset_guidance: |
-    Preferably use dataset overview diagrams, benchmark testing diagrams, formulas defining metrics,
-    and main comparison tables containing decisive results.
+    Preferably use dataset overview diagrams, benchmark testing diagrams, formulas that define metrics,
+    and main comparison tables that include decisive results.
+
+survey / review:
+  section_guidance: |
+    Prioritize presenting the scope and motivation of the review, literature screening or organization methods, classification systems, main method categories,
+    horizontal comparisons, field trends, research gaps, and future directions, avoiding a paper-by-paper listing.
+  asset_guidance: |
+    Preferably use field panorama diagrams, classification system diagrams, development context diagrams, and cross-method comparison tables;
+    formulas should only be chosen when they can represent a class of methods or explain key classification dimensions.
 
 application/trustworthiness:
   section_guidance: |
@@ -28,4 +36,4 @@ application/trustworthiness:
     evaluations, limitations, and broader impacts.
   asset_guidance: |
     Preferably use application workflow diagrams, qualitative examples, safety or reliability analyses, and result tables.
-    Formulas should only be chosen when they are critical to mechanisms or evaluations.
+    Formulas should only be chosen when they are crucial to mechanisms or evaluations.
