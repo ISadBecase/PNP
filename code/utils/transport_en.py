@@ -6,6 +6,7 @@ import logging
 from camel.agents import ChatAgent
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType
+from utils.retry import retry_sync
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,9 @@ def sync_english_prompts(app_config):
         model_config_dict={"temperature": 0},
         api_key=app_config.llm.api_key,
         url=app_config.llm.base_url,
+        max_retries=0,
     )
-    agent = ChatAgent(system_message=system_prompt, model=model)
+    agent = ChatAgent(system_message=system_prompt, model=model, retry_attempts=1)
     translated = []
 
     logger.info(" 🚀 开始翻译英文提示词...")
@@ -60,8 +62,11 @@ def sync_english_prompts(app_config):
             content = file.read()
 
         if content:
-            agent.reset()
-            response = agent.step(f"Filename: {filename}\n\nFile content:\n{content}")
+            def call_translator():
+                agent.reset()
+                return agent.step(f"Filename: {filename}\n\nFile content:\n{content}")
+
+            response = retry_sync(call_translator)
             english = response.msgs[0].content
             stripped = english.strip()
             if stripped.startswith("```") and stripped.endswith("```"):
@@ -77,6 +82,6 @@ def sync_english_prompts(app_config):
         with open(json_file, "w", encoding="utf-8") as file:
             json.dump(hashes, file, ensure_ascii=False, indent=2)
         translated.append(filename)
-        logger.info(f" ✅ 成功翻译文件: {filename}")
+        logger.info(f"     ✅ 成功翻译文件: {filename}")
 
     return translated

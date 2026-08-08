@@ -25,7 +25,7 @@ def load_equation_image(png_path):
     background = Image.new("RGBA", image.size, (255, 255, 255, 255))
     return Image.alpha_composite(background, image).convert("RGB")
 
-# 为公式增加注释 description
+# 为公式增加注释 llm_description
 def analyze_equations(app_config, args):
     equations_prompt="equation_analyzer"
     with open(os.path.join("code", "prompt", "en", f"{equations_prompt}.yaml"), "r", encoding="utf-8") as file:
@@ -37,10 +37,12 @@ def analyze_equations(app_config, args):
         model_config_dict={"temperature": 0.1},
         api_key=app_config.vlm.api_key,
         url=app_config.vlm.base_url,
+        max_retries=0,
     )
     equation_agent = ChatAgent(
         system_message=config["system_prompt"],
         model=model,
+        retry_attempts=1,
     )
     template = Template(config["template"], undefined=StrictUndefined)
     total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
@@ -83,7 +85,7 @@ def analyze_equations(app_config, args):
             response = retry_sync(lambda: _step_agent(equation_agent, message))
             result = get_json_from_response(response.msgs[0].content)
 
-            equation["description"] = result.get("description", "")
+            equation["llm_description"] = result.get("llm_description", "")
 
             usage = response.info.get("usage", {})
             for name in total_usage:
@@ -94,7 +96,7 @@ def analyze_equations(app_config, args):
 
     return total_usage
 
-# 为图片增加注释 description
+# 为图片增加注释 llm_description
 def analyze_figures(app_config, args):
     figures_prompt = "figure_analyzer"
     with open(os.path.join("code", "prompt", "en", f"{figures_prompt}.yaml"), "r", encoding="utf-8") as file:
@@ -106,10 +108,12 @@ def analyze_figures(app_config, args):
         model_config_dict={"temperature": 0.1},
         api_key=app_config.vlm.api_key,
         url=app_config.vlm.base_url,
+        max_retries=0,
     )
     figure_agent = ChatAgent(
         system_message=config["system_prompt"],
         model=model,
+        retry_attempts=1,
     )
     template = Template(config["template"], undefined=StrictUndefined)
     total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
@@ -152,7 +156,7 @@ def analyze_figures(app_config, args):
             response = retry_sync(lambda: _step_agent(figure_agent, message))
             result = get_json_from_response(response.msgs[0].content)
 
-            figure["description"] = result.get("description", "")
+            figure["llm_description"] = result.get("llm_description", "")
 
             usage = response.info.get("usage", {})
             for name in total_usage:
@@ -163,7 +167,7 @@ def analyze_figures(app_config, args):
 
     return total_usage
 
-# 为表格增加注释 description
+# 为表格增加注释 llm_description
 def analyze_tables(app_config, args):
     tables_prompt = "table_analyzer"
     with open(os.path.join("code", "prompt", "en", f"{tables_prompt}.yaml"), "r", encoding="utf-8") as file:
@@ -175,10 +179,12 @@ def analyze_tables(app_config, args):
         model_config_dict={"temperature": 0.1},
         api_key=app_config.vlm.api_key,
         url=app_config.vlm.base_url,
+        max_retries=0,
     )
     table_agent = ChatAgent(
         system_message=config["system_prompt"],
         model=model,
+        retry_attempts=1,
     )
     template = Template(config["template"], undefined=StrictUndefined)
     total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
@@ -222,7 +228,7 @@ def analyze_tables(app_config, args):
             response = retry_sync(lambda: _step_agent(table_agent, message))
             result = get_json_from_response(response.msgs[0].content)
 
-            table["description"] = result.get("description", "")
+            table["llm_description"] = result.get("llm_description", "")
 
             usage = response.info.get("usage", {})
             for name in total_usage:

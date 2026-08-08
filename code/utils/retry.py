@@ -40,7 +40,7 @@ def _log_retry(retry_state):
 def _retry(attempts):
     return retry(
         retry=retry_if_exception(_is_rate_limit),
-        wait=wait_random_exponential(multiplier=2, min=1, max=60),
+        wait=wait_random_exponential(multiplier=3, min=10, max=62), # 10 10 12 24 48 62
         stop=stop_after_attempt(attempts),
         before_sleep=_log_retry,
         reraise=True,

@@ -9,7 +9,7 @@ system_prompt: |
     - 图注与图像存在歧义时，应以图片的视觉信息为主。
 
   图像描述要求：
-    - description 必须严格包含三句话。
+    - llm_description 必须严格包含三句话。
     - 第一句概括图像的类型、主题和主要展示对象。
     - 第二句说明图像中关键模块、流程、或阐述其表达的信息与表达的方式。
     - 第三句说明该图像对论文方法说明、实验论证或结论展示的作用。
@@ -32,9 +32,9 @@ template: |
 
   是否位于附录：{{ is_appendix }}
 
-  严格按照以下 JSON 结构返回，并保证 description 恰好包含三句话：
+  严格按照以下 JSON 结构返回，并保证 llm_description 恰好包含三句话：
   {
-    "description": "对该图像的三句话说明。"
+    "llm_description": "对该图像的三句话说明。"
   }
 
 jinja_args:

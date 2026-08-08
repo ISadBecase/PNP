@@ -23,9 +23,7 @@ system_prompt: |
     - 论文对已有方法的阐述占全文超一半篇幅。
 
   回答的内容要求：
-    - 按照内容关联度，最多返回两个判断类别。
-    - 若判断结果包含两个类型，按照贡献程度优先级从高到低组织返回结果。
-    - 结合论文内容和类型判断标准，为每个判断结果的类别提供判断理由。
+    - 按照内容关联度，只能返回一个判断类别。
 
   回答的格式要求：
     - 返回格式为 JSON 对象。
@@ -38,24 +36,13 @@ template: |
   {{ paper_main_content }}
 
   返回格式要求:
-    - 当判断结果仅包含一个论文类型时，严格返回以下 JSON 结构：
+    - 严格返回以下 JSON 结构：
       {
         "categories": [
           "判断类别关键词"
         ],
         "category_reasons": [
           "判断理由"
-        ]
-      }
-    - 当判断结果仅包含两个论文类型时，严格返回以下 JSON 结构：
-      {
-        "categories": [
-          "判断类别关键词1",
-          "判断类别关键词2"
-        ],
-        "category_reasons": [
-          "判断类别关键词1 的判断理由",
-          "判断类别关键词2 的判断理由"
         ]
       }
     - categories 字段中的字符串必须从以下类别中选择：Method/Algorithm、Theory/Analysis、Benchmark/Evaluation、Survey / Review

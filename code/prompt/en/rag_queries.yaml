@@ -1,36 +1,38 @@
 motivation:
-  - What research problem does this paper attempt to address? Why is this problem important?
-  - What limitations exist in current methods, and how do these limitations motivate the authors to conduct this research?
-  - What research gaps or key challenges does the paper identify?
+  - What problem or task does this paper aim to address? Please describe the specific challenges faced.
+  - What limitations or drawbacks of existing methods are mentioned in the introduction or related work?
+  - What unmet needs or research gaps motivated this study? How does this research differ from existing work?
 
 solution:
-  - What methods, systems, theories, or evaluation schemes does the paper propose? Please provide an overall overview.
+  - What methods, technical approaches, or frameworks does this paper propose? Please provide an overall overview.
   - What are the main components or processing stages of the proposed solution, and how do they work together?
-  - What are the most important technical innovations, design choices, or theoretical perspectives in the paper?
-  - What algorithmic processes, training methods, implementation settings, or analysis steps does the paper adopt?
+  - What key equations, formulas, or mathematical definitions are presented in the paper? Please show the symbols and mathematical expressions.
+  - What is the algorithm, execution process, or workflow of the method? Please describe the key steps involved.
 
 results:
-  - What datasets, experimental setups, evaluation metrics, or analysis protocols does the paper use?
-  - What are the most important quantitative and qualitative results? Please retain key values and comparative relationships.
-  - How does the proposed solution perform compared to existing methods or baselines?
-  - What conclusions are supported by ablation studies, sensitivity analyses, or supplementary analyses?
+  - What datasets, experimental setups, or benchmark tasks were used for evaluation in the paper?
+  - What evaluation metrics or criteria were used to measure performance?
+  - How does the proposed method perform compared to baseline methods or existing approaches? Please provide specific comparisons.
+  - What performance did the proposed method achieve? Please report the exact values from the experiments.
+  - What ablation studies and additional observations are included in the paper? Please provide a brief overview.
 
 contributions:
-  - What are the main contributions of the paper?
-  - In what ways does the paper's novelty manifest compared to existing work?
-  - What limitations does the paper acknowledge, and what future research directions does it propose?
+  - What are the main contributions listed in the introduction or conclusion of the paper?
+  - What are the innovations or novel aspects of this work compared to existing methods?
+  - What limitations does the paper acknowledge? What future research directions are proposed?
 
 figures:
-  - Which figures most intuitively present the research problem, methodological mechanisms, or key findings?
-  - Which figures can be combined to explain the complete methodological process or evidence of effectiveness?
-  - Which figures are redundant, overly detailed, or unsuitable for intuitively conveying the paper's focus?
+  - Which images visually present the research problem and motivation?
+  - Which images can be combined to explain the complete methodological process of the paper?
+  - Which images are repetitive, overly detailed, or unsuitable for visually highlighting the key points of the paper?
 
 tables:
-  - Which tables provide the strongest quantitative evidence for the core claims of the paper?
-  - Which tables can be combined to express overall performance, ablation conclusions, or data characteristics?
-  - Which tables are overly detailed, redundant, or unsuitable for the final poster?
+  - Which tables quantitatively and visually present the main experimental results of the paper?
+  - Which tables can be combined to express ablation conclusions and demonstrate the effectiveness of the modules?
+  - Which tables show performance comparisons under different methods or settings?
+  - Which tables are used to describe common configurations or are too detailed for final poster presentation?
 
 equations:
-  - Which equations collectively define the core methods, theoretical claims, or evaluation metrics of the paper?
-  - Which equations should be combined to fully express a particular viewpoint or process? Summarize the meaning expressed after combining.
-  - Which equations are too conventional, rely on lengthy derivations, or are unsuitable for the final poster?
+  - Which formulas are used to clarify background knowledge or related work?
+  - Which formulas collectively define the core methods or processes of the paper?
+  - Which formulas are too conventional, rely on lengthy derivations, or are unsuitable for the final poster?

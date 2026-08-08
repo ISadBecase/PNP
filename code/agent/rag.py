@@ -90,7 +90,7 @@ def create_content_list(args):
                         [
                             f"[Figure]:",
                             f"{figure['id']} Caption: {figure.get('caption', '')}",
-                            f"{figure['id']} Description: {figure.get('description', '')}",
+                            f"{figure['id']} Description: {figure.get('llm_description', '')}",
                         ]
                     )
                 )
@@ -104,7 +104,7 @@ def create_content_list(args):
                         [
                             f"[Table]:",
                             f"{table['id']} Caption: {table.get('caption', '')}",
-                            f"{table['id']} Description as: {table.get('description', '')}",
+                            f"{table['id']} Description as: {table.get('llm_description', '')}",
                         ]
                     )
                 )
@@ -118,7 +118,7 @@ def create_content_list(args):
                         [
                             f"[Equation]:",
                             f"{equation['id']} LaTeX Format: {equation['raw_tex']}",
-                            f"{equation['id']} Description as: {equation.get('description', '')}",
+                            f"{equation['id']} Description as: {equation.get('llm_description', '')}",
                         ]
                     )
                 )
@@ -203,6 +203,7 @@ async def _initialize_rag(config, storage_dir):
             func=embedding_func,
         ),
         llm_model_name=config.llm.model,
+        llm_model_max_async=2
     )
     await rag.initialize_storages()
     await initialize_pipeline_status()
@@ -333,7 +334,7 @@ async def query_rag_categories(config, args, categories):
 
     return results
 
-# RAG Asset Query (Figures & Tables & Equations)
+# RAG Asset Query (Figures & Tables & Equations) with LLM
 def analyze_asset_categories(config, args, asset_categories):
     prompt_dir = os.path.join("code", "prompt", "en")
     with open(os.path.join(prompt_dir, "rag_queries.yaml"), "r", encoding="utf-8") as file:
@@ -349,8 +350,13 @@ def analyze_asset_categories(config, args, asset_categories):
         model_config_dict={"temperature": 0.1},
         api_key=config.llm.api_key,
         url=config.llm.base_url,
+        max_retries=0,
     )
-    asset_agent = ChatAgent(system_message=asset_config["system_prompt"], model=model)
+    asset_agent = ChatAgent(
+        system_message=asset_config["system_prompt"],
+        model=model,
+        retry_attempts=1,
+    )
     asset_template = Template(asset_config["template"], undefined=StrictUndefined)
 
     total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
@@ -368,7 +374,7 @@ def analyze_asset_categories(config, args, asset_categories):
         with open(os.path.join(paper_dir, "paper_profile.json"), "r", encoding="utf-8") as file:
             profile = json.load(file)
 
-        paper_types = profile["paper_type"]
+        paper_types = profile["categories"]
         section_titles = {
             section.get("id", ""): section.get("title", "")
             for section in sections["sections"]
@@ -390,19 +396,18 @@ def analyze_asset_categories(config, args, asset_categories):
                     "id": asset["id"],
                     "defined_in": asset["defined_in"],
                     "section_title": section_titles[asset["defined_in"]],
-                    "description": asset["description"],
+                    "llm_description": asset.get("llm_description", ""),
                     "is_appendix": asset["is_appendix"],
                 }
                 if asset_type in ("figures", "tables"):
                     item["caption"] = asset["caption"]
-                if asset_type == "equations":
+                if asset_type in ("equations","tables"):
                     item["raw_tex"] = asset["raw_tex"]
                 asset_items.append(item)
 
             if not asset_items:
                 raw_results["asset_queries"][asset_type] = {
                     "groups": [],
-                    "excluded_resources": [],
                 }
                 continue
 

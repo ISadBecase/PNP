@@ -41,7 +41,7 @@ template: |
 
   Strictly return according to the following JSON structure:
   {
-    "description": "Description of the formula."
+    "llm_description": "Description of the formula."
   }
 
 jinja_args:

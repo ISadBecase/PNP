@@ -9,6 +9,7 @@ from .response import get_json_from_response
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType
 from camel.agents import ChatAgent
+from utils.retry import retry_sync
 
 # 论文重点内容提取
 INTRODUCTION_NAMES = [ "introduction"]
@@ -49,11 +50,13 @@ def classify_papers(app_config,args):
         model_config_dict={"temperature": 0.1},
         api_key=app_config.llm.api_key,
         url=app_config.llm.base_url,
+        max_retries=0,
     )
     classify_agent = ChatAgent(
         system_message=config["system_prompt"],
         model=classify_model,
         message_window_size=4,
+        retry_attempts=1,
     )
     template = Template(config["template"], undefined=StrictUndefined)
     results = {}
@@ -66,8 +69,11 @@ def classify_papers(app_config,args):
             paper_main_content = json.load(file)
 
         prompt = template.render(paper_main_content=paper_main_content)
-        classify_agent.reset()
-        response = classify_agent.step(prompt)
+        def call_classifier():
+            classify_agent.reset()
+            return classify_agent.step(prompt)
+
+        response = retry_sync(call_classifier)
         result = get_json_from_response(response.msgs[0].content)
 
         usage = response.info.get("usage", {})

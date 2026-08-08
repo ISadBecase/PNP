@@ -41,7 +41,7 @@ template: |
 
   严格按照以下 JSON 结构返回：
   {
-    "description": "对该公式的说明。"
+    "llm_description": "对该公式的说明。"
   }
 
 jinja_args:

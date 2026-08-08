@@ -39,17 +39,19 @@
 
 "Survey / Review":
   motivation:
-    - Why is this review needed in the field, and what scattered, chaotic, or unresolved issues exist in the current knowledge or research directions?
+    - From what perspective does the paper elaborate on what research question?
+    - What scattered, chaotic, or unresolved issues exist in the current knowledge or research pathways?
   solution:
-    - What literature scope, selection methods, classification systems, or organizational frameworks does the paper adopt?
-    - On what key dimensions does the paper compare existing methods, and what are the main features and differences of various methods?
+    - What is the scope of the literature reviewed in the paper, the selection methods, classification system, or organizational framework? Please provide an overview.
+    - What key dimensions does the paper classify to elaborate on existing methods? Please provide an overview.
+    - What are the main characteristics and differences of various existing methods as perceived by the paper? Please provide an overview.
   results:
-    - What major trends, consensus, controversies, research gaps, and future directions does the review identify?
+    - What major trends, consensus, controversies, research gaps, and future directions does the paper identify?
   contributions:
-    - What unique value do the classification system, unified perspective, or research agenda proposed by the paper have?
+    - What unique value does the classification system, unified perspective, or research agenda proposed by the paper have?
   figures:
-    - What combinations of images most clearly display the panoramic view of the field, method classifications, development context, or unified framework?
+    - What combinations of images most clearly display the panoramic view of the field, method classification, development context, or unified framework?
   tables:
     - What combinations of tables are most suitable for comparing the capabilities, applicable scenarios, advantages, and limitations of different method categories?
   equations:
-    - What formulas are representative across methods and can help explain the classification dimensions or core technical differences in the review?
+    - What formulas are representative across methods and can help explain the classification dimensions or core technical differences in the paper?

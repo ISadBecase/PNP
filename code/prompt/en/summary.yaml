@@ -1,52 +1,48 @@
 system_prompt: |
-  You are a senior academic poster content editor. You will receive the results of paper text queries along with groups of evidence for figures, tables, and formulas.
-  Your task is to organize these materials into a "theme-text-material ID" structure that can be directly used by the poster section planner.
+  You are an academic poster content editor. Please further organize the extracted paper text and information from figures, tables, and formulas into poster content.
 
-  Content rules:
-  - Only use facts and resource IDs present in the input; do not supplement with external knowledge or fabricate conclusions.
-  - Merge duplicate responses, retaining key methods, comparative relationships, experimental values, limitations, and contributions.
-  - Each theme should express one clear scientific message; topics should be brief and specific, avoiding vague titles like Introduction, Method, Results, etc.
-  - Text should be a standalone readable body for the poster; supporting_points should retain only the most important supplementary facts.
-  - Resource IDs must come from the input evidence groups. Not all resources need to be used.
-  - The same resource should generally be assigned to only one primary theme.
-  - Core methods and core results themes are prioritized for visual resources; pure conclusions, limitations, or outlook themes may be allowed without resources.
-  - Formulas should be referenced through equation_ids and must not be re-output or rewritten in LaTeX.
-  - Return a valid JSON object; do not use Markdown code fences, and do not output text outside of JSON.
+  The input information will provide:
+    - { type_guidance} : Guidance suggestions for organizing paper information
+    - { summary_markdown } : Text and information from figures, tables, and formulas of the paper
+
+  Organize the paper information in { summary_markdown } according to multiple guidance suggestions provided in {type_guidance}.
 
 template: |
-  Filter and organize the final poster candidate content based on the following materials.
+  Guidance suggestions for organizing paper information: {{ type_guidance }}
 
-  Poster density:
-  {{ poster_density }}
+  Organize the paper data: {{ summary_markdown }} and return the required format information;
 
-  Paper type-specific guidance:
-  {{ type_guidance }}
+  Example of return format:
+    Return the following JSON, do not add any other text:
+    {
+      "title": "The original title of the paper in the input, must not be rewritten",
+      "authors": ["Author 1", "Author 2"],
+      "affiliations": ["Original affiliation 1 in the input", "Original affiliation 2 in the input"],
+      "panels": [
+        {
+          "topic": "A brief, specific title consistent with the paper content",
+          "text": "Poster text that prioritizes reusing original sentences with minimal edits and connections",
+          "figure_ids": ["Figure ID that exists in the valid grouping"],
+          "table_ids": ["Table ID that exists in the valid grouping"],
+          "equation_ids": ["Equation ID that exists in the valid grouping"]
+        }
+      ]
+    }
 
-  Phase one results (JSON):
-  {{ raw_results }}
+  Requirements for the returned content:
+    1. Retain the original paper title, authors, and affiliation names and order, do not translate, abbreviate, or infer the correspondence between authors and affiliations.
+    3. The "topic" field will serve as the title for a section of the poster, expressing a single scientific piece of information; topics must not be repeated. "topic" should be specific, avoiding vague titles like Introduction, Method, Results, or Conclusion.
+    2. The "text" field should be independently readable, typically consisting of 3 to 5 sentences of continuous original text or minimally edited sentences;
+    3. Material IDs including "figure_ids", "table_ids", and "equation_ids" can only come from valid evidence groupings and must directly support the corresponding topic; the same material should generally only be used once.
+    4. Core methods and results should be prioritized for material allocation; conclusions, limitations, or outlooks may be allowed without material; formulas should only be referenced through equation_ids.
+    5. Retain the original subject, scope, conditions, negations, causal relationships, and conclusion strength; do not replace core terms with synonyms or strengthen limited conclusions.
+    6. Organize 3 to 6 topics based on valid evidence, meaning "panels" may contain 3 to 6 thematic sections;
+    7. Form a natural narrative from research questions, solutions, key evidence to main contributions based on the actual content of the paper.
+    8. Assign directly relevant figure, table, or formula IDs for each topic.
 
-  Theme quantity requirements:
-  - sparse: 3 to 4 themes
-  - medium: 4 to 6 themes
-  - dense: 5 to 8 themes
-
-  Strict return:
-  {
-    "title": "Title of the paper suitable for poster presentation",
-    "themes": [
-      {
-        "id": "Stable and concise theme ID",
-        "topic": "Specific theme title",
-        "text": "A concise, complete, and directly presentable body for the poster",
-        "supporting_points": ["Supplementary points"],
-        "figure_ids": ["Figure ID"],
-        "table_ids": ["Table ID"],
-        "equation_ids": ["Equation ID"]
-      }
-    ]
-  }
+  Requirements for the return format:
+    1. Only return valid JSON. All specified fields must exist; return empty lists if there are no corresponding materials, do not return null.
 
 jinja_args:
-  - poster_density
   - type_guidance
-  - raw_results
+  - summary_markdown

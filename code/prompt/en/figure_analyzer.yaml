@@ -9,7 +9,7 @@ system_prompt: |
     - In case of ambiguity between the caption and the image, prioritize the visual information from the image.
 
   Image description requirements:
-    - The description must strictly contain three sentences.
+    - The llm_description must strictly contain three sentences.
     - The first sentence summarizes the type, theme, and main subject of the image.
     - The second sentence explains the key modules, processes in the image, or elaborates on the information expressed and the manner of expression.
     - The third sentence describes the role of the image in explaining the methods, experimental validation, or conclusion presentation of the paper.
@@ -32,9 +32,9 @@ template: |
 
   Is it in the appendix: {{ is_appendix }}
 
-  Strictly return according to the following JSON structure, ensuring that the description contains exactly three sentences:
+  Strictly return according to the following JSON structure, ensuring that llm_description contains exactly three sentences:
   {
-    "description": "Three-sentence explanation of the image."
+    "llm_description": "Three-sentence explanation of the image."
   }
 
 jinja_args:

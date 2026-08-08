@@ -71,7 +71,7 @@ def extract_figures(paper_json, figures_json):
             {
                 "id": figure.get("id", ""),
                 "caption": figure.get("caption", ""),
-                "description": "",
+                "llm_description": "",
                 "defined_in": figure.get("defined_in", ""),
                 "is_appendix": figure.get("is_appendix", False),
                 "png_path": os.path.normpath(os.path.join(paper_dir, png_file)),
@@ -96,7 +96,7 @@ def extract_tables(paper_json, tables_json):
             {
                 "id": table.get("id", ""),
                 "caption": table.get("caption", ""),
-                "description": "",
+                "llm_description": "",
                 "raw_tex": table.get("raw_tex", ""),
                 "defined_in": table.get("defined_in", ""),
                 "is_appendix": table.get("is_appendix", False),
@@ -121,7 +121,7 @@ def extract_equations(paper_json, equations_json):
         equations.append(
             {
                 "id": equation.get("id", ""),
-                "description": "",
+                "llm_description": "",
                 "raw_tex": equation.get("raw_tex", ""),
                 "defined_in": equation.get("defined_in", ""),
                 "is_appendix": equation.get("is_appendix", False),

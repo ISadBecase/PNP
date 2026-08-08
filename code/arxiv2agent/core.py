@@ -46,6 +46,7 @@ def digest(
     local_folder: Optional[str] = None,
     use_cache: bool = True,
     expand_macros: bool = True,
+    cache_dir: Optional[str] = None,
 ) -> dict:
     """Structure an arXiv paper into a flat JSON-ready dict.
 
@@ -62,14 +63,18 @@ def digest(
     if local_folder:
         source_dir = Path(local_folder)
     else:
-        from arxiv2agent._tex import get_default_cache_dir
-        source_dir = get_default_cache_dir() / arxiv_id
+        if cache_dir:
+            source_dir = Path(cache_dir) / arxiv_id
+        else:
+            from arxiv2agent._tex import get_default_cache_dir
+            source_dir = get_default_cache_dir() / arxiv_id
 
     # ── Step 1 + 2: download (cached) + flatten + denoise comments + (optional) macros
     tex = process_latex_source(
         arxiv_id=arxiv_id,
         local_folder=local_folder,
         keep_comments=False,
+        cache_dir=cache_dir,
         remove_appendix_section=False,    # never lose appendix at fetch time
         use_cache=use_cache,
         expand_macros_flag=expand_macros,

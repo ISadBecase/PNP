@@ -231,7 +231,14 @@ def write_digest(
         src_root = root / "source"
         if src_root.exists():
             shutil.rmtree(src_root)
-        shutil.copytree(source_folder, src_root)
+        shutil.copytree(
+            source_folder,
+            src_root,
+            ignore=shutil.ignore_patterns(
+                ".arxiv_cache_complete",
+                ".arxiv_api_meta.json",
+            ),
+        )
 
     # ── paper.json: COMPLETE machine-readable form
     # Contains everything: full sections text, full entity content (raw_tex,

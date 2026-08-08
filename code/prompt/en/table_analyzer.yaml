@@ -7,7 +7,7 @@ system_prompt: |
     - Use the visible table content and LaTeX source code as the basis for values and structure, and use the caption and chapter context as the basis for semantics.
     
   Table description requirements:
-    - The description text must contain {N+1} sentences.
+    - The llm_description text must contain {N+1} sentences.
     - The nth sentence explains the objects, datasets, and metrics of the table comparison, summary, or ablation analysis. {N} represents the number of datasets/experimental ablation types in the table.
     - The last {1} sentence summarizes the most critical and reliably confirmable results from the table or context and their role in the paper.
     - These {N+1} sentences should form an independent, complete description suitable for subsequent poster material selection.
@@ -33,9 +33,9 @@ template: |
 
   Is the table located in the appendix: {{ is_appendix }}
 
-  Strictly return according to the following JSON structure, ensuring that the description contains exactly N+1 sentences:
+  Strictly return according to the following JSON structure, ensuring that llm_description contains exactly N+1 sentences:
   {
-    "description": "Explanation of the table in N+1 sentences."
+    "llm_description": "Explanation of the table in N+1 sentences."
   }
 
 jinja_args:
