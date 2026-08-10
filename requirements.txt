@@ -1,15 +1,20 @@
+# Agent and RAG
 camel-ai==0.2.90
-mcp>=1.3,<2
 lightrag-hku==1.5.4
 openai>=2.0,<3
-pydantic>=2.10,<2.13
+
+# Configuration and prompt templates
 python-dotenv>=1.0,<2
-Pillow>=10,<12
 PyYAML>=6,<7
 Jinja2>=3.1,<4
+
+# Response parsing and API reliability
 json-repair>=0.30,<1
+tenacity>=9,<10
+
+# Paper source processing
 requests>=2.31,<3
 filelock>=3.13,<4
-tqdm>=4.66,<5
-reportlab>=4,<5
-tenacity>=9,<10
+
+# Image processing
+Pillow>=10,<12

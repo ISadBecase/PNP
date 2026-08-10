@@ -76,11 +76,11 @@
     - ```shell
         & "D:\Anaconda3\envs\Pytorch\python.exe" .\code\entry.py 2402.17228 2508.10104 2312.00752
         ```
-    > [!TIP]
-    >
-    > 如果您生成海报后认为其效果并不理想，可自由编辑 output/poster/<paper_id>/ 内的Latex文件，进行个性化的二次编辑。
-    >
-    > 实际上，您可以在entry.py中学习配置相关参数，以从项目运行过程中的任意阶段编辑后断点运行，逐步最终海报效果！🤗🤗🤗
+> [!TIP]
+>
+> 如果您生成海报后认为其效果并不理想，可自由编辑 output/poster/<paper_id>/ 内的Latex文件，进行个性化的二次编辑。
+>
+> 实际上，您可以在entry.py中学习配置相关参数，以从项目运行过程中的任意阶段编辑后断点运行，逐步最终海报效果！🤗🤗🤗
 
 ## 4️⃣ 文件树
 
@@ -89,12 +89,17 @@
   ```python
   PNP/
   ├── .gitignore
-  ├── README.md
-  ├── README.zh-CN.md
+  ├── README.md                         # 中文默认文档
+  ├── README.en.md                      # 英文文档
+  ├── LICENSE                           # MIT许可证
   ├── requirements.txt
   │
   ├── assets/
-  │   └── logo.png                         # 项目 Logo
+  │   ├── logo.png                         # 项目Logo
+  │   ├── example1.png                     # README海报样例
+  │   ├── example2.png
+  │   ├── example3.png
+  │   └── example4.png
   │
   └── code/
       ├── entry.py                         # 项目运行入口
@@ -113,26 +118,26 @@
       │   └── poster_review.py             # 海报栏与最终海报VLM审查
       │
       ├── config/
-      │   └── poster_layout.yaml           # 海报尺寸、字体、间距及布局参数（需要结合实际微调）
+      │   └── poster_layout.yaml            # 海报尺寸、字体、间距及布局参数（需要结合实际微调）
       │
       ├── prompt/
-      │   ├── zh_en.json                   # 中文Prompt文件的哈希记录，自动化中英Prompt互译
+      │   ├── zh_en.json                    # 中文Prompt文件的哈希记录，自动化中英Prompt互译
       │   │
       │   ├── zh/
-      │   │   ├── paper_classifier.yaml		# 用于判断论文贡献类型
-      │   │   ├── paper_type_guidance.yaml	# 用于辅助总结论文内容，因论文贡献类型而异
+      │   │   ├── paper_classifier.yaml		    # 用于判断论文贡献类型
+      │   │   ├── paper_type_guidance.yaml	    # 用于辅助总结论文内容，因论文贡献类型而异
       │   │   ├── equation_analyzer.yaml		# 用于公式VLM分析
-      │   │   ├── figure_analyzer.yaml		# 用于图像VLM分析（可选）
+      │   │   ├── figure_analyzer.yaml		    # 用于图像VLM分析（可选）
       │   │   ├── table_analyzer.yaml			# 用于表格VLM分析（可选）
-      │   │   ├── rag_queries.yaml			# 用于RAG Query
-      │   │   ├── rag_type_queries.yaml		# 用于辅助RAG Query，因论文贡献类型而异
+      │   │   ├── rag_queries.yaml			    # 用于RAG Query
+      │   │   ├── rag_type_queries.yaml		    # 用于辅助RAG Query，因论文贡献类型而异
       │   │   ├── rag_asset_analyzer.yaml		# 用于筛选有价值的Figure、Table、Equation元素
-      │   │   ├── summary.yaml				# 用于RAG Query后的二次内容梳理
+      │   │   ├── summary.yaml				    # 用于RAG Query后的二次内容梳理
       │   │   ├── summary_type_guidance.yaml	# 用于辅助RAG Query后的二次内容梳理，因论文贡献类型而异
-      │   │   ├── poster_column_review.yaml	# 用于VLM审理海报左右栏效果
-      │   │   └── poster_final_review.yaml	# 用于VLM审理最终海报效果
+      │   │   ├── poster_column_review.yaml	    # 用于VLM审理海报左右栏效果
+      │   │   └── poster_final_review.yaml	    # 用于VLM审理最终海报效果
       │   │
-      │   └── en/								# 与上述 zh/ 内同名Prompt同理，仅英汉互译
+      │   └── en/							# 与上述 zh/ 内同名Prompt同理，仅英汉互译
       │       ├── paper_classifier.yaml
       │       ├── paper_type_guidance.yaml
       │       ├── equation_analyzer.yaml
@@ -176,7 +181,9 @@
 
   ```python
   output/
-  ├── arxiv/						# 详情参考[README Reference]
+  ├── run.log                           # 当前一次程序运行日志
+  │
+  ├── arxiv/						    # 详情参考[README Reference]
   │   └── <paper_id>/
   │       ├── paper.json
   │       ├── source/
@@ -185,20 +192,28 @@
   │       └── equations/
   │
   ├── temp/
-  │   └── <paper_id>/					# 注:输入多个Paper Arxiv ID，则产生多个文件夹
-  │       ├── sections.json			# 解析出的文本信息
-  │       ├── figures.json			# 解析出的图片信息
+  │   └── <paper_id>/				# 注:输入多个Paper Arxiv ID，则产生多个文件夹
+  │       ├── main_section.json		    # 用于论文类型判断的主要章节内容
+  │       ├── sections.json			    # 解析出的文本信息
+  │       ├── figures.json			    # 解析出的图片信息
   │       ├── tables.json				# 解析出的表格信息
   │       ├── equations.json			# 解析出的公式信息
   │       ├── paper_profile.json		# 论文类型判断信息
-  │       ├── content_list.json		# 结构化论文信息，用于交付RAG
+  │       ├── content_list.json		    # 结构化论文信息，用于交付RAG
   │       ├── raw_query_results.json	# RAG Query结果记录
-  │       ├── summary_input.md		# RAG Query结果记录(Markdown),用于二次LLM总结
-  │       ├── poster_evidence.json	# 预选海报内容
-  │       ├── rag_sections/			# 可视化各章节整理后的(交付RAG的)内容
-  │       ├── rag_storage/			# LightRAG建库 生成文件
+  │       ├── summary_input.md		    # RAG Query结果记录(Markdown),用于二次LLM总结
+  │       ├── poster_evidence.json	    # 预选海报内容
+  │       ├── rag_sections/			    # 可视化各章节整理后的(交付RAG的)内容
+  │       ├── rag_storage/			    # LightRAG建库 生成文件
   │       └── poster/
-  │           ├── poster_layout.json	# 布局参数
+  │           ├── poster_layout.json	    # 当前布局参数
+  │           ├── layout_reviews.json	    # 左右栏历次VLM审查结果
+  │           ├── iterations/			    # 左右栏迭代历史
+  │           │   └── iteration_<n>/
+  │           │       ├── left.png
+  │           │       ├── right.png
+  │           │       ├── layout.json
+  │           │       └── review.json
   │           ├── previews/
   │           │   ├── left.png		# 左栏预览图
   │           │   └── right.png		# 右栏预览图
@@ -213,9 +228,16 @@
           ├── poster.tex				# 海报最终Latex,可修改
           ├── poster.pdf				# 海报最终PDF
           ├── poster.png				# 海报最终PNG
-          ├── preamble.tex			# 海报导言区
+          ├── poster_review.json		# 最终海报VLM审查结果
+          ├── preamble.tex			    # 海报导言区
           ├── panels/					# 海报各Panels Latex
-          └── columns/				# 海报左右栏 Latex
+          ├── columns/				    # 海报左右栏 Latex
+          └── iterations/
+              └── final_<n>/			# 最终海报审查快照
+                  ├── poster.pdf
+                  ├── poster.png
+                  ├── layout.json
+                  └── review.json
   ```
 
 ## 5️⃣ FAQ
