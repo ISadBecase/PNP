@@ -9,6 +9,8 @@
   "rag_asset_analyzer.yaml": "3a4610c93bd1565171b67e941b891f853ffc84089a2d718c06b657ba335f3317",
   "rag_queries.yaml": "7b24054330ee8e09007cc7fc4b405376e570f7086840380a554f950ed9b4b36c",
   "rag_type_queries.yaml": "d983be0f63288fe008f7bc5f84511c5bcad932fc54b11956d1fca181e3384431",
-  "summary.yaml": "fdf4ea048205b9088b686ccf2fe0b96fd778b159baa24a943478943bd575d4f1",
-  "summary_type_guidance.yaml": "a3b6ab1cdfd48380695faa4b7fdc8da0cc19f15283f17d29c5d13effe54e16e6"
+  "summary.yaml": "1109e515171f3b5affb809e4bf765c9f7baad7ca359ab2da2c6245828d9b22e9",
+  "summary_type_guidance.yaml": "a3b6ab1cdfd48380695faa4b7fdc8da0cc19f15283f17d29c5d13effe54e16e6",
+  "poster_column_review.yaml": "04714de2e57d0eee9cf2564ab2ef8f0a79df9a74fca5131f2beaf98b93595b62",
+  "poster_final_review.yaml": "68384b494ea3c1e5fc96ec1490d483a534d759d681773bde1b2861c5335ffded"
 }

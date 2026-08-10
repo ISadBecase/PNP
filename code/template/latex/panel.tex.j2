@@ -1,0 +1,20 @@
+\begin{posterpanel}{ {{ topic }} }
+{% for row in asset_rows %}
+{% if row.layout == "equal_height_pair" %}
+\begin{center}
+{% for asset in row.assets %}
+\begin{minipage}[c]{ {{ asset.display_width }}in}
+\centering
+\includegraphics[width=\linewidth,height={{ asset.display_height }}in,keepaspectratio]{ {{ asset.path }} }
+\end{minipage}{% if not loop.last %}\hspace{ {{ row.gap }}in}{% endif %}
+{% endfor %}
+\end{center}
+{% else %}
+{% set asset = row.assets[0] %}
+\begin{center}
+\includegraphics[width={{ asset.display_width }}in,height={{ asset.display_height }}in,keepaspectratio]{ {{ asset.path }} }
+\end{center}
+{% endif %}
+{% endfor %}
+{\fontsize{ {{ font_size }} }{ {{ line_height }} }\selectfont\RaggedRight {{ text }} }
+\end{posterpanel}

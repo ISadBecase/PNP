@@ -92,6 +92,50 @@ def build_summary_markdown(raw_results, markdown_file):
     return markdown
 
 
+def resolve_repeated_panel_assets(panels):
+    fields = ("figure_ids", "table_ids", "equation_ids")
+    placements = {}
+    for index, panel in enumerate(panels):
+        importance = panel.get("asset_importance", {})
+        panel_importance = panel.get("importance", 0)
+        if not isinstance(panel_importance, int):
+            panel_importance = 0
+        for field in fields:
+            for asset_id in panel.get(field, []):
+                asset_importance = importance.get(asset_id, 0)
+                if not isinstance(asset_importance, int):
+                    asset_importance = 0
+                placements.setdefault(asset_id, []).append(
+                    (asset_importance, panel_importance, -index)
+                )
+
+    winners = {}
+    duplicates = {}
+    for asset_id, scores in placements.items():
+        if len(scores) > 1:
+            winner = -max(scores)[2]
+            winners[asset_id] = winner
+            duplicates[asset_id] = panels[winner].get("panel_id", "")
+
+    for index, panel in enumerate(panels):
+        kept = set()
+        for field in fields:
+            ids = []
+            for asset_id in panel.get(field, []):
+                if asset_id in kept:
+                    continue
+                if asset_id in winners and winners[asset_id] != index:
+                    continue
+                ids.append(asset_id)
+                kept.add(asset_id)
+            panel[field] = ids
+        for asset_id in list(panel.get("asset_importance", {})):
+            if asset_id in winners and winners[asset_id] != index:
+                del panel["asset_importance"][asset_id]
+
+    return duplicates
+
+
 def summarize_papers(config, args):
     prompt_dir = os.path.join("code", "prompt", "en")
     with open(os.path.join(prompt_dir, "summary.yaml"), "r", encoding="utf-8") as file:
@@ -150,16 +194,52 @@ def summarize_papers(config, args):
             for group in asset_result.get("groups", []):
                 allowed_ids.get(asset_type, set()).update(group.get("resource_ids", []))
 
-        theme_fields = {
+        panel_fields = {
             "figure_ids": "figures",
             "table_ids": "tables",
             "equation_ids": "equations",
         }
-        for theme in result.get("themes", []):
-            for field, asset_type in theme_fields.items():
-                unknown = set(theme.get(field, [])) - allowed_ids[asset_type]
+        panels = result.get("panels", [])
+        if not 5 <= len(panels) <= 8:
+            raise ValueError(f"Poster panels must be between 5 and 8 in {paper_id}")
+
+        duplicates = resolve_repeated_panel_assets(panels)
+        for asset_id, panel_id in duplicates.items():
+            logger.warning(
+                "Repeated asset ID resolved: %s | kept in %s | paper=%s",
+                asset_id,
+                panel_id,
+                paper_id,
+            )
+
+        panel_ids = [panel.get("panel_id", "") for panel in panels]
+        expected_ids = [f"panel_{index:02d}" for index in range(1, len(panels) + 1)]
+        if panel_ids != expected_ids:
+            raise ValueError(f"Panel IDs must be sequential in {paper_id}")
+
+        used_assets = set()
+        for panel in panels:
+            importance = panel.get("importance")
+            if not isinstance(importance, int) or not 1 <= importance <= 5:
+                raise ValueError(f"Invalid panel importance in {paper_id}: {panel.get('panel_id')}")
+            panel_assets = []
+            for field, asset_type in panel_fields.items():
+                ids = panel.get(field, [])
+                unknown = set(ids) - allowed_ids[asset_type]
                 if unknown:
                     raise ValueError(f"Unknown {asset_type} IDs in {paper_id}: {', '.join(sorted(unknown))}")
+                panel_assets.extend(ids)
+
+            duplicates = used_assets.intersection(panel_assets)
+            if duplicates:
+                raise ValueError(f"Repeated asset IDs in {paper_id}: {', '.join(sorted(duplicates))}")
+            used_assets.update(panel_assets)
+
+            asset_importance = panel.get("asset_importance", {})
+            if set(asset_importance) != set(panel_assets):
+                raise ValueError(f"asset_importance does not match panel assets in {paper_id}: {panel['panel_id']}")
+            if any(not isinstance(value, int) or not 1 <= value <= 5 for value in asset_importance.values()):
+                raise ValueError(f"Invalid asset importance in {paper_id}: {panel['panel_id']}")
 
         usage = response.info.get("usage", {})
         for name in total_usage:
@@ -168,6 +248,6 @@ def summarize_papers(config, args):
         with open(os.path.join(paper_dir, "poster_evidence.json"), "w", encoding="utf-8") as file:
             json.dump(result, file, ensure_ascii=False, indent=2)
         results[paper_id] = result
-        logger.info(f"     ✅ Poster evidence completed: {paper_id} | themes={len(result.get('themes', []))}")
+        logger.info(f"     ✅ Poster evidence completed: {paper_id} | panels={len(panels)}")
 
     return results, total_usage

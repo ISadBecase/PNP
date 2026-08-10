@@ -2,8 +2,18 @@ import json
 import os
 import re
 import logging
+from PIL import Image
 
 logger = logging.getLogger(__name__)
+
+
+def image_dimensions(filename):
+    if not os.path.isfile(filename):
+        return None, None, None
+    with Image.open(filename) as image:
+        width, height = image.size
+    ratio = round(width / height, 4) if height else None
+    return width, height, ratio
 
 def clean_ref(text):
     return re.sub(
@@ -65,8 +75,17 @@ def extract_figures(paper_json, figures_json):
     paper_dir = os.path.dirname(paper_json)
     figures = []
     for figure in paper.get("figures", []):
-        png_file = os.path.splitext(figure.get("file", ""))[0] + ".png"
-        pdf_file = os.path.splitext(figure.get("file", ""))[0] + ".pdf"
+        figure_stem = os.path.splitext(figure.get("file", ""))[0]
+        pdf_path = os.path.normpath(os.path.join(paper_dir, figure_stem + ".pdf"))
+        if not os.path.isfile(pdf_path):
+            pdf_path = ""
+        image_path = ""
+        for suffix in (".png", ".jpg", ".jpeg"):
+            candidate = os.path.normpath(os.path.join(paper_dir, figure_stem + suffix))
+            if os.path.isfile(candidate):
+                image_path = candidate
+                break
+        width, height, ratio = image_dimensions(image_path)
         figures.append(
             {
                 "id": figure.get("id", ""),
@@ -74,8 +93,11 @@ def extract_figures(paper_json, figures_json):
                 "llm_description": "",
                 "defined_in": figure.get("defined_in", ""),
                 "is_appendix": figure.get("is_appendix", False),
-                "png_path": os.path.normpath(os.path.join(paper_dir, png_file)),
-                "pdf_path": os.path.normpath(os.path.join(paper_dir, pdf_file)),  # 不一定存在
+                "png_path": image_path,
+                "pdf_path": pdf_path,
+                "width_px": width,
+                "height_px": height,
+                "aspect_ratio": ratio,
             }
         )
 
@@ -92,6 +114,8 @@ def extract_tables(paper_json, tables_json):
     tables = []
     for table in paper.get("tables", []):
         png_file = os.path.splitext(table.get("file", ""))[0] + ".png"
+        png_path = os.path.normpath(os.path.join(tables_dir, png_file))
+        width, height, ratio = image_dimensions(png_path)
         tables.append(
             {
                 "id": table.get("id", ""),
@@ -101,7 +125,10 @@ def extract_tables(paper_json, tables_json):
                 "defined_in": table.get("defined_in", ""),
                 "is_appendix": table.get("is_appendix", False),
                 "tex_file": os.path.normpath(os.path.join(tables_dir, table.get("file", ""))),
-                "png_file": os.path.normpath(os.path.join(tables_dir, png_file)),
+                "png_file": png_path,
+                "width_px": width,
+                "height_px": height,
+                "aspect_ratio": ratio,
             }
         )
 
@@ -118,6 +145,8 @@ def extract_equations(paper_json, equations_json):
     equations = []
     for equation in paper.get("equations", []):
         png_file = os.path.splitext(equation.get("file", ""))[0] + ".png"
+        png_path = os.path.normpath(os.path.join(equations_dir, png_file))
+        width, height, ratio = image_dimensions(png_path)
         equations.append(
             {
                 "id": equation.get("id", ""),
@@ -126,7 +155,10 @@ def extract_equations(paper_json, equations_json):
                 "defined_in": equation.get("defined_in", ""),
                 "is_appendix": equation.get("is_appendix", False),
                 "tex_file": os.path.normpath(os.path.join(equations_dir, equation.get("file", ""))),
-                "png_file": os.path.normpath(os.path.join(equations_dir, png_file)),
+                "png_file": png_path,
+                "width_px": width,
+                "height_px": height,
+                "aspect_ratio": ratio,
             }
         )
 

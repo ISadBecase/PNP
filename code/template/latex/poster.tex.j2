@@ -1,0 +1,66 @@
+\documentclass{article}
+\input{preamble.tex}
+\geometry{paperwidth={{ width }}in,paperheight={{ height }}in,margin=0in}
+\pagestyle{empty}
+\begin{document}
+\begin{tikzpicture}[remember picture,overlay]
+
+\node[anchor=north west,inner sep=0pt,outer sep=0pt]
+at (current page.north west) {
+\begin{minipage}[t][{{ header_height }}in][c]{\paperwidth}
+\centering
+{\color{PNPBlue}\bfseries\fontsize{ {{ title_font_size }} }{ {{ title_line_height }} }\selectfont {{ title }}\par}
+\vspace{0.18in}
+{\fontsize{ {{ author_font_size }} }{ {{ author_line_height }} }\selectfont {{ authors }}\par}
+{\fontsize{ {{ affiliation_font_size }} }{ {{ affiliation_line_height }} }\selectfont {{ affiliations }}\par}
+\end{minipage}
+};
+
+\node[anchor=north west,inner sep=0pt,outer sep=0pt]
+at ([xshift={{ margin }}in,yshift=-{{ header_height + section_gap }}in]current page.north west) {
+\begin{tcolorbox}[
+  enhanced,
+  width={{ content_width }}in,
+  height={{ abstract_height }}in,
+  colback=PNPLight,
+  colframe=PNPBlue,
+  coltitle=white,
+  colbacktitle=PNPBlue,
+  title={Abstract},
+  fonttitle=\bfseries\fontsize{ {{ abstract_title_font_size }} }{ {{ abstract_title_line_height }} }\selectfont,
+  boxrule=1.3pt,
+  arc=4pt,
+  left=0.30in,
+  right=0.30in,
+  top=0.22in,
+  bottom=0.22in,
+  before skip=0pt,
+  after skip=0pt
+]
+\begin{adjustbox}{max width=\linewidth,max totalheight={{ abstract_height - 1.15 }}in,valign=t}
+\begin{minipage}[t]{\linewidth}
+{\fontsize{ {{ abstract_font_size }} }{ {{ abstract_font_size * abstract_line_spacing }} }\selectfont\RaggedRight {{ abstract }}\par}
+\end{minipage}
+\end{adjustbox}
+\end{tcolorbox}
+};
+
+{% for column_name in ["left", "right"] -%}
+\node[anchor=north west,inner sep=0pt,outer sep=0pt]
+at ([xshift={{ margin + loop.index0 * (column_width + column_gap) }}in,yshift=-{{ header_height + 2 * section_gap + abstract_height }}in]current page.north west) {
+\begin{minipage}[t][{{ body_height }}in][t]{ {{ column_width }}in}
+\begin{adjustbox}{max width=\linewidth,max totalheight={{ body_height }}in,valign=t}
+\begin{minipage}[t]{\linewidth}
+\input{columns/{{ column_name }}.tex}
+\end{minipage}
+\end{adjustbox}
+\end{minipage}
+};
+{% endfor %}
+
+\node[anchor=south west,inner sep=0pt,outer sep=0pt]
+at (current page.south west) {\noindent{\color{PNPBlue}\rule{\paperwidth}{ {{- footer_height -}}in}}};
+
+\end{tikzpicture}
+\mbox{}
+\end{document}

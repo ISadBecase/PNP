@@ -1,0 +1,30 @@
+system_prompt: |
+  You are the final reviewer of an academic poster. Review the complete three-column poster for reading flow, visual balance, information hierarchy, readability, and consistency.
+  Panel order cannot be changed. Return valid JSON only, without Markdown fences or extra text.
+
+template: |
+  Poster layout data:
+  {{ layout_json }}
+
+  Return exactly:
+  {
+    "status": "pass or needs_revision",
+    "issues": [
+      {
+        "type": "specific issue type",
+        "severity": 1,
+        "description": "specific issue",
+        "panel_id": "related Panel ID or empty string"
+      }
+    ]
+  }
+
+  Check:
+    1. Natural reading order from left to center to right.
+    2. Whether the key panel forms a clear visual center in the middle column.
+    3. Obvious overflow, crowding, emptiness, or severe bottom imbalance.
+    4. Header clarity and readability of figures, tables, and equations.
+    5. Never suggest swapping or reordering panels.
+
+jinja_args:
+  - layout_json

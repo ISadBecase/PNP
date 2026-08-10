@@ -159,7 +159,7 @@ def download_arxiv_source(
                 return False
 
             url = f'https://arxiv.org/e-print/{arxiv_id}'
-            logging.info(f"Downloading source from {url}")
+            logging.info(f"    ✅ Downloading source from {url}")
             headers = {'User-Agent': 'Mozilla/5.0'}
 
             staging_dir = Path(tempfile.mkdtemp(prefix=f"{arxiv_id}.", dir=staging_root))
@@ -204,7 +204,7 @@ def download_arxiv_source(
                     if published and backup_dir and backup_dir.exists():
                         _safe_rmtree(backup_dir)
 
-                logging.info(f"Source files downloaded and extracted to {directory}/")
+                logging.info(f"    ✅ Source files downloaded and extracted to {directory}/")
                 return True
             finally:
                 _safe_rmtree(staging_dir)

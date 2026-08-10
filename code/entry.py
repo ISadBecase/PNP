@@ -15,6 +15,9 @@ from agent.parser_vlm import analyze_equations,analyze_figures,analyze_tables
 from agent.paper_elements import extract_contents
 from agent.rag import analyze_asset_categories,build_rag_database,create_content_list,query_rag_categories
 from agent.summary import summarize_papers
+from agent.poster_layout import create_poster_layout
+from agent.poster_latex import render_final_poster, render_poster_columns
+from agent.poster_review import review_final_posters, review_poster_columns
 
 
 def set_log(args,close_log_info):
@@ -78,7 +81,7 @@ def run_arxiv2agent_stage(args,logger):
         raise RuntimeError("All arXiv ID processing failed")
 
 
-STAGES = ["start","render","extract","classify","equation_vlm","figure_vlm","table_vlm","rag_content","rag_build","rag_query","asset_query","summary",]
+STAGES = ["start","render","extract","classify","equation_vlm","figure_vlm","table_vlm","rag_content","rag_build","rag_query","asset_query","summary","layout","column_render","layout_review","poster_render"]
 RAG_QUERY_CATEGORIES = ["motivation", "solution", "results", "contributions"]
 ASSET_QUERY_CATEGORIES = ["figures", "tables", "equations"]
 CLOSE_LOG_INFO=["httpx","httpcore","openai","camel","PIL","nano-vectordb","lightrag"]
@@ -128,12 +131,12 @@ def main():
     start_stage = STAGES.index(args.stage)
 
     if start_stage <= STAGES.index("start"):
-        logger.info(" 🚀 [1/12] Start arXiv parsing")
+        logger.info(" 🚀 [1/16] Start arXiv parsing")
         run_arxiv2agent_stage(args,logger)
 
     # Convert Figures PDFs & Equations Latex to PNG
     if start_stage <= STAGES.index("render"):
-        logger.info(" 🚀 [2/12] Start LaTeX rendering")
+        logger.info(" 🚀 [2/16] Start LaTeX rendering")
         render_results = parser_arxiv.convert_root(args)
         failed = sum(result[1] == "failed" for result in render_results)
         logger.info(f" ✅ LaTeX fragments: {len(render_results)} processed, {failed} failed")
@@ -143,12 +146,12 @@ def main():
 
     # 重炼论文资源
     if start_stage <= STAGES.index("extract"):
-        logger.info(" 🚀 [3/12] Start paper element extraction")
+        logger.info(" 🚀 [3/16] Start paper element extraction")
         extract_contents(args)
 
     # 提取主要内容(Title、Abstract、Introduction、Conclusion)->论文类型判断
     if start_stage <= STAGES.index("classify"):
-        logger.info(" 🚀 [4/12] Start paper classification")
+        logger.info(" 🚀 [4/16] Start paper classification")
         extract_main_content(args)
         classification_results, classification_usage = classify_papers(app_config, args)
         for paper_id, result in classification_results.items():
@@ -163,9 +166,9 @@ def main():
     # 为论文公式添加VLM分析
     if start_stage <= STAGES.index("equation_vlm"):
         if "equation" in args.disable_vlm:
-            logger.info(" ⏭️ [5/12] Skip equation analysis")
+            logger.info(" ⏭️ [5/16] Skip equation analysis")
         else:
-            logger.info(" 🚀 [5/12] Start equation analysis")
+            logger.info(" 🚀 [5/16] Start equation analysis")
             equation_usage = analyze_equations(app_config, args)
             logger.info(
                 " ✅ Equation VLM tokens | input=%d output=%d total=%d",
@@ -177,9 +180,9 @@ def main():
     # 为论文图片添加VLM分析
     if start_stage <= STAGES.index("figure_vlm"):
         if "figure" in args.disable_vlm:
-            logger.info(" ⏭️ [6/12] Skip figure analysis")
+            logger.info(" ⏭️ [6/16] Skip figure analysis")
         else:
-            logger.info(" 🚀 [6/12] Start figure analysis")
+            logger.info(" 🚀 [6/16] Start figure analysis")
             figure_usage = analyze_figures(app_config, args)
             logger.info(
                 " ✅ Figure VLM tokens | input=%d output=%d total=%d",
@@ -191,9 +194,9 @@ def main():
     # 为论文表格添加VLM分析
     if start_stage <= STAGES.index("table_vlm"):
         if "table" in args.disable_vlm:
-            logger.info(" ⏭️ [7/12] Skip table analysis")
+            logger.info(" ⏭️ [7/16] Skip table analysis")
         else:
-            logger.info(" 🚀 [7/12] Start table analysis")
+            logger.info(" 🚀 [7/16] Start table analysis")
             table_usage = analyze_tables(app_config, args)
             logger.info(
                 " ✅ Table VLM tokens | input=%d output=%d total=%d",
@@ -205,18 +208,18 @@ def main():
 
     # RAG Build Resources
     if start_stage <= STAGES.index("rag_content"):
-        logger.info(" 🚀 [8/12] Start RAG content construction")
+        logger.info(" 🚀 [8/16] Start RAG content construction")
         results = create_content_list(args)
         logger.info(f" ✅ RAG content list created : {', '.join(list(results.keys()))}")
 
     async def run_rag_stages(app_config, args, start_stage, logger):
         if start_stage <= STAGES.index("rag_build"):
-            logger.info(" 🚀 [9/12] Start LightRAG database construction")
+            logger.info(" 🚀 [9/16] Start LightRAG database construction")
             results = await build_rag_database(app_config, args)
             logger.info(" ✅ LightRAG databases created: %s", ", ".join(results))
 
         if start_stage <= STAGES.index("rag_query"):
-            logger.info(" 🚀 [10/12] Start categorized RAG queries")
+            logger.info(" 🚀 [10/16] Start categorized RAG queries")
             results = await query_rag_categories(
                 app_config, args, RAG_QUERY_CATEGORIES
             )
@@ -228,7 +231,7 @@ def main():
 
     # RAG Asset Query (Figures & Tables & Equations)
     if start_stage <= STAGES.index("asset_query"):
-        logger.info(" 🚀 [11/12] Start figure, table and equation analysis")
+        logger.info(" 🚀 [11/16] Start figure, table and equation analysis")
         results, usage = analyze_asset_categories(
             app_config, args, ASSET_QUERY_CATEGORIES
         )
@@ -241,11 +244,45 @@ def main():
         )
 
     if start_stage <= STAGES.index("summary"):
-        logger.info(" 🚀 [12/12] Start poster evidence summary")
+        logger.info(" 🚀 [12/16] Start poster evidence summary")
         results, usage = summarize_papers(app_config, args)
         logger.info(" ✅ Poster evidence created: %s", ", ".join(results))
         logger.info(
             " ✅ Summary tokens | input=%d output=%d total=%d",
+            usage["prompt_tokens"],
+            usage["completion_tokens"],
+            usage["total_tokens"],
+        )
+
+    if start_stage <= STAGES.index("layout"):
+        logger.info(" 🚀 [13/16] Start ordered three-column layout")
+        results = create_poster_layout(args)
+        logger.info(" ✅ Poster layouts created: %s", ", ".join(results))
+
+    if start_stage <= STAGES.index("column_render"):
+        logger.info(" 🚀 [14/16] Start LaTeX column rendering")
+        results = render_poster_columns(args)
+        logger.info(" ✅ Poster columns rendered: %s", ", ".join(results))
+
+    if start_stage <= STAGES.index("layout_review"):
+        logger.info(" 🚀 [15/16] Start VLM column review")
+        results, usage = review_poster_columns(app_config, args)
+        logger.info(" ✅ Poster columns reviewed: %s", ", ".join(results))
+        logger.info(
+            " ✅ Layout review tokens | input=%d output=%d total=%d",
+            usage["prompt_tokens"],
+            usage["completion_tokens"],
+            usage["total_tokens"],
+        )
+
+    if start_stage <= STAGES.index("poster_render"):
+        logger.info(" 🚀 [16/16] Start final poster rendering")
+        results = render_final_poster(args)
+        logger.info(" ✅ Final posters rendered: %s", ", ".join(results))
+        reviews, usage = review_final_posters(app_config, args)
+        logger.info(" ✅ Final posters reviewed: %s", ", ".join(reviews))
+        logger.info(
+            " ✅ Final review tokens | input=%d output=%d total=%d",
             usage["prompt_tokens"],
             usage["completion_tokens"],
             usage["total_tokens"],

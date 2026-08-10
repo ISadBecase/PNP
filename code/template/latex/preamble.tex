@@ -1,0 +1,37 @@
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb,mathtools,bm}
+\usepackage{array,booktabs,multirow,makecell,rotating,xspace}
+\usepackage{fontspec}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+\usepackage{adjustbox}
+\usepackage{ragged2e}
+\usepackage{tikz}
+\setmainfont{TeX Gyre Heros}
+\definecolor{PNPBlue}{HTML}{173B57}
+\definecolor{PNPLight}{HTML}{F3F7FA}
+\definecolor{PNPAccent}{HTML}{2C7DA0}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.15in}
+\newtcolorbox{posterpanel}[2][]{
+  enhanced,
+  colback=white,
+  colframe=PNPBlue,
+  coltitle=white,
+  colbacktitle=PNPBlue,
+  title={ #2 },
+  fonttitle=\bfseries\fontsize{ {{ panel_title_font_size }} }{ {{ panel_title_line_height }} }\selectfont,
+  toptitle={{ panel_title_top_padding }}in,
+  bottomtitle={{ panel_title_bottom_padding }}in,
+  boxrule=1.3pt,
+  arc=4pt,
+  left=0.22in,
+  right=0.22in,
+  top=0.18in,
+  bottom=0.20in,
+  before skip=0pt,
+  after skip=0pt,
+  #1
+}

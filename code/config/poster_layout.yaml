@@ -1,0 +1,90 @@
+poster:
+  width: 36.0
+  height: 54.0
+  header_height: 6.0
+  footer_height: 0.6
+  section_gap: 0.4
+  body_footer_gap: 0.6
+  margin: 0.6
+  column_gap: 0.4
+
+header:
+  title_font_size: 64
+  title_line_height: 70
+  author_font_size: 34
+  author_line_height: 38
+  affiliation_font_size: 26
+  affiliation_line_height: 30
+
+abstract:
+  title_font_size: 42
+  title_line_height: 45
+  reference_font_size: 38
+  min_font_size: 35
+  max_font_size: 41
+  min_line_spacing: 1.20
+  max_line_spacing: 1.30
+  min_height: 3.2
+  max_height: 7.0
+  estimated_chars_per_line: 150
+  vertical_padding: 1.15
+
+panels:
+  min_count: 5
+  max_count: 8
+  gap: 0.25
+  padding: 0.22
+  title_font_size: 42
+  title_line_height: 45
+  title_top_padding: 0.30
+  title_bottom_padding: 0.30
+  min_gap: 0.20
+  max_gap: 0.55
+
+text:
+  font_size: 38
+  min_font_size: 35
+  max_font_size: 41
+  line_spacing: 1.25
+  min_line_spacing: 1.60
+  max_line_spacing: 1.80
+  estimated_chars_per_line: 42
+
+assets:
+  figure:
+    min_height_ratio: 0.08
+    max_height_ratio: 0.28
+    wide_ratio_threshold: 1.5
+    wide_width_ratio: 0.96
+    pair_target_ratio: 2.0
+    pair_ratio_tolerance: 0.35
+    pair_width_ratio: 0.96
+    pair_gap: 0.18
+    centered_width_ratio: 0.68
+    secondary_width_ratio: 0.55
+    high_importance_threshold: 4
+  table:
+    min_height_ratio: 0.09
+    max_height_ratio: 0.24
+    min_width_ratio: 0.72
+    pair_min_width_ratio: 0.36
+  equation:
+    min_height_ratio: 0.05
+    max_height_ratio: 0.16
+    source_dpi: 600
+    source_font_size: 10
+    target_font_size: 28
+    max_width_ratio: 0.94
+
+layout:
+  target_utilization: 0.96
+  overflow_tolerance: 0.01
+  max_column_height_difference: 0.08
+  max_iterations: 8
+
+importance_scale:
+  1: 0.45
+  2: 0.60
+  3: 0.75
+  4: 0.90
+  5: 1.00
