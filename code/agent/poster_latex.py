@@ -8,7 +8,7 @@ import subprocess
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from .poster_layout import _split_panels
+from .poster_layout import _split_panels, _update_dynamic_canvas
 
 
 logger = logging.getLogger(__name__)
@@ -257,6 +257,7 @@ def _fit_panel_typography(layout, latex_dir, environment, config):
     layout["fonts"]["body_line_spacing"] = selected_spacing
     _write_panel_files(layout, latex_dir, environment, config)
     _measure_panels(layout, latex_dir, minimum_gap)
+    _update_dynamic_canvas(layout, config)
     _set_column_gaps(layout, config)
     logger.info(
         "     Poster typography fitted: %s | font=%d spacing=%.2f | left=%.1f%% right=%.1f%%",
@@ -281,6 +282,25 @@ def _write_columns(layout, latex_dir):
                 lines.append(f"\\vspace{{{gap}in}}")
         with open(os.path.join(column_dir, column_name + ".tex"), "w", encoding="utf-8") as file:
             file.write("\n".join(lines) + "\n")
+
+
+def _validate_final_columns(layout):
+    overflow = {}
+    body_height = layout.get("canvas", {}).get("body_height", 0)
+    for column_name, column in layout["columns"].items():
+        utilization = column.get("utilization")
+        if utilization is None and body_height:
+            utilization = column.get("estimated_height", 0) / body_height
+        if utilization is not None and utilization > 1.01:
+            overflow[column_name] = utilization
+    if overflow:
+        details = ", ".join(
+            f"{name}={value * 100:.1f}%" for name, value in overflow.items()
+        )
+        raise RuntimeError(
+            f"Dynamic poster height is stale in {layout['paper_id']}: {details}. "
+            "Render poster columns again before final rendering."
+        )
 
 
 def render_poster_columns(args):
@@ -322,9 +342,13 @@ def render_poster_columns(args):
         preview_template = environment.get_template("column_preview.tex.j2")
         previews = {}
         for column_name in ("left", "right"):
+            preview_height = max(
+                layout["canvas"]["body_height"],
+                layout["columns"][column_name]["estimated_height"],
+            )
             source = preview_template.render(
                 page_width=layout["canvas"]["column_width"] + 0.4,
-                page_height=layout["canvas"]["body_height"] + 0.4,
+                page_height=preview_height + 0.4,
                 margin=0.2,
                 column_name=column_name,
             )
@@ -361,6 +385,7 @@ def render_final_poster(args):
             continue
         with open(layout_file, "r", encoding="utf-8") as file:
             layout = json.load(file)
+        _validate_final_columns(layout)
         latex_dir = os.path.join(poster_dir, "latex")
         final_dir = os.path.join(args.output_dir, "poster", paper_id)
         os.makedirs(final_dir, exist_ok=True)

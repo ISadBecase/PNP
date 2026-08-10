@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shutil
 
 import yaml
 from PIL import Image
@@ -16,6 +17,21 @@ from utils.retry import retry_sync
 
 
 logger = logging.getLogger(__name__)
+
+
+def _save_column_iteration(poster_dir, layout, iteration):
+    iteration_dir = os.path.join(
+        poster_dir, "iterations", f"iteration_{iteration:02d}"
+    )
+    os.makedirs(iteration_dir, exist_ok=True)
+    for column_name in ("left", "right"):
+        shutil.copyfile(
+            os.path.join(poster_dir, "previews", column_name + ".png"),
+            os.path.join(iteration_dir, column_name + ".png"),
+        )
+    with open(os.path.join(iteration_dir, "layout.json"), "w", encoding="utf-8") as file:
+        json.dump(layout, file, ensure_ascii=False, indent=2)
+    return iteration_dir
 
 
 def _create_agent(config, system_prompt):
@@ -98,6 +114,7 @@ def review_poster_columns(config, args):
         for iteration in range(layout_config["layout"]["max_iterations"]):
             with open(layout_file, "r", encoding="utf-8") as file:
                 layout = json.load(file)
+            iteration_dir = _save_column_iteration(poster_dir, layout, iteration)
             iteration_reviews = {}
             changed = False
             for column_name in ("left", "right"):
@@ -105,7 +122,16 @@ def review_poster_columns(config, args):
                 column_panels = [panel for panel in layout["panels"] if panel["panel_id"] in panel_ids]
                 prompt = template.render(
                     column_name=column_name,
-                    column_json=json.dumps(column_panels, ensure_ascii=False, indent=2),
+                    column_json=json.dumps(
+                        {
+                            "available_height": layout["canvas"]["body_height"],
+                            "current_height": layout["columns"][column_name]["estimated_height"],
+                            "utilization": layout["columns"][column_name].get("utilization"),
+                            "panels": column_panels,
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
                 )
                 image_file = os.path.join(poster_dir, "previews", column_name + ".png")
                 response = _call_agent(agent, prompt, image_file, "Poster Column Reviewer")
@@ -117,12 +143,17 @@ def review_poster_columns(config, args):
                     total_usage[name] += usage.get(name, 0) or 0
 
             reviews.append({"iteration": iteration + 1, "columns": iteration_reviews})
+            with open(os.path.join(iteration_dir, "review.json"), "w", encoding="utf-8") as file:
+                json.dump(iteration_reviews, file, ensure_ascii=False, indent=2)
             layout["iteration"] = iteration + 1
             with open(layout_file, "w", encoding="utf-8") as file:
                 json.dump(layout, file, ensure_ascii=False, indent=2)
             if not changed or all(review.get("status") == "pass" for review in iteration_reviews.values()):
                 break
             render_poster_columns(args)
+            with open(layout_file, "r", encoding="utf-8") as file:
+                layout = json.load(file)
+            _save_column_iteration(poster_dir, layout, iteration + 1)
 
         review_file = os.path.join(poster_dir, "layout_reviews.json")
         with open(review_file, "w", encoding="utf-8") as file:
@@ -148,11 +179,23 @@ def review_final_posters(config, args):
             continue
         with open(layout_file, "r", encoding="utf-8") as file:
             layout = json.load(file)
+        iteration_dir = os.path.join(
+            args.output_dir, "poster", paper_id, "iterations", "final_00"
+        )
+        os.makedirs(iteration_dir, exist_ok=True)
+        shutil.copyfile(image_file, os.path.join(iteration_dir, "poster.png"))
+        pdf_file = os.path.join(args.output_dir, "poster", paper_id, "poster.pdf")
+        if os.path.isfile(pdf_file):
+            shutil.copyfile(pdf_file, os.path.join(iteration_dir, "poster.pdf"))
+        with open(os.path.join(iteration_dir, "layout.json"), "w", encoding="utf-8") as file:
+            json.dump(layout, file, ensure_ascii=False, indent=2)
         prompt = template.render(layout_json=json.dumps(layout, ensure_ascii=False, indent=2))
         response = _call_agent(agent, prompt, image_file, "Poster Final Reviewer")
         result = get_json_from_response(response.msgs[0].content)
         output_file = os.path.join(args.output_dir, "poster", paper_id, "poster_review.json")
         with open(output_file, "w", encoding="utf-8") as file:
+            json.dump(result, file, ensure_ascii=False, indent=2)
+        with open(os.path.join(iteration_dir, "review.json"), "w", encoding="utf-8") as file:
             json.dump(result, file, ensure_ascii=False, indent=2)
         usage = response.info.get("usage", {})
         for name in total_usage:

@@ -24,10 +24,12 @@ template: |
 
   Rules:
     1. Never suggest reorder_panels, panel swaps, or direct LaTeX edits.
-    2. Low-importance assets must not dominate the column. Key panels and high-importance assets should have stronger visual weight.
-    3. Tables and equations must remain readable; do not solve crowding by excessive shrinking.
-    4. ratio must be between 0.80 and 1.20. Return an empty adjustments list when no change is needed.
-    5. Judge only from the supplied image and layout data.
+    2. Column width is fixed and must never be scaled or reduced.
+    3. Poster height expands automatically from the taller column. Do not shrink assets merely because the column exceeds an earlier canvas height.
+    4. Low-importance assets must not dominate the column. High-importance assets should retain stronger visual weight.
+    5. Tables and equations must remain readable; do not solve crowding by excessive shrinking.
+    6. ratio must be between 0.80 and 1.20. Return an empty adjustments list when no visual adjustment is needed.
+    7. Judge only from the supplied image and layout data.
 
 jinja_args:
   - column_name

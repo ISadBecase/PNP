@@ -203,7 +203,8 @@ async def _initialize_rag(config, storage_dir):
             func=embedding_func,
         ),
         llm_model_name=config.llm.model,
-        llm_model_max_async=2
+        llm_model_max_async=2,
+        entity_extraction_use_json=True,            # 缓解LightRAG建库过程中的字段错误
     )
     await rag.initialize_storages()
     await initialize_pipeline_status()

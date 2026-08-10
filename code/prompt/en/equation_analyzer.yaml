@@ -10,6 +10,9 @@ system_prompt: |
     - Only return a valid JSON object.
     - Do not use Markdown code fences, and do not add any text outside the JSON object.
     - The formula description must not fabricate variable definitions.
+    - llm_description must be natural-language plain text and must not contain LaTeX commands, backslashes, dollar-delimited formulas, or Markdown math.
+    - When mathematical symbols are necessary, use directly displayable Unicode characters such as Δ, α, β, Σ, ×, ≤, ≥, X̄, and X̂. If a symbol cannot be represented reliably in Unicode, describe it in words.
+    - Do not copy or rewrite the input LaTeX source into llm_description. Use the LaTeX source only to understand the equation.
 
   Formula description result requirements:
     - The formula description language must strictly consist of two sentences.
@@ -37,11 +40,11 @@ template: |
 
   Is the formula located in the appendix: {{ is_appendix }}
 
-  Write a concise, independent, and complete description as required.
+  Write a concise, independent, and complete plain-text description. Do not use backslashes or LaTeX commands in the description.
 
   Strictly return according to the following JSON structure:
   {
-    "llm_description": "Description of the formula."
+    "llm_description": "A two-sentence plain-text explanation using natural language and necessary Unicode mathematical symbols."
   }
 
 jinja_args:

@@ -90,7 +90,7 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("arxiv_ids", nargs="+", help="one or more arXiv IDs, e.g. 2305.13860 1706.03762")
     parser.add_argument("--output_dir", default="./output", help="Output Directory")
-    parser.add_argument("--stage", default="start", choices=STAGES)
+    parser.add_argument("--stage", default="summary", choices=STAGES)
     parser.add_argument("--disable_vlm",nargs="*",default=["figure", "table"],choices=["equation", "figure", "table"])
 
     # For gpt-image-2 and gpt-image-2-2026-04-21, arbitrary resolutions are supported as WIDTHxHEIGHT strings.

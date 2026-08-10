@@ -203,8 +203,6 @@ def _arrange_asset_rows(assets, column_width, body_height, config):
 def _split_panels(panels, body_height, panel_gap=0):
     best = None
     panel_height = lambda panel: panel.get("measured_height") or panel["estimated_height"]
-    total_height = sum(panel_height(panel) for panel in panels)
-    target = total_height / 2
 
     for split in range(1, len(panels)):
         groups = [panels[:split], panels[split:]]
@@ -212,12 +210,9 @@ def _split_panels(panels, body_height, panel_gap=0):
             sum(panel_height(panel) for panel in group) + panel_gap * max(0, len(group) - 1)
             for group in groups
         ]
-        overflow = [max(0, height - body_height) for height in heights]
-        balance = sum((height - target) ** 2 for height in heights)
         score = (
-            sum(value > 0 for value in overflow),
-            round(sum(overflow), 6),
-            round(balance, 6),
+            round(max(heights) / body_height, 6),
+            round(abs(heights[0] - heights[1]), 6),
         )
         if best is None or score < best[0]:
             best = score, split, groups, heights
@@ -233,6 +228,33 @@ def _split_panels(panels, body_height, panel_gap=0):
             "estimated_height": round(heights[1], 3),
         },
     }, [split]
+
+
+def _update_dynamic_canvas(layout, config):
+    poster = config["poster"]
+    target = config["layout"]["target_utilization"]
+    tallest = max(
+        column.get("estimated_height", 0) for column in layout["columns"].values()
+    )
+    canvas = layout["canvas"]
+    fixed_height = (
+        canvas["header_height"]
+        + canvas["abstract_height"]
+        + 2 * canvas["section_gap"]
+        + canvas["body_footer_gap"]
+        + canvas["footer_height"]
+    )
+    body_height = max(tallest / target, poster["min_height"] - fixed_height)
+    poster_height = (
+        fixed_height + body_height
+    )
+    canvas["body_height"] = round(body_height, 3)
+    canvas["height"] = round(max(poster["min_height"], poster_height), 3)
+    for column in layout["columns"].values():
+        column["utilization"] = round(
+            column.get("estimated_height", 0) / canvas["body_height"], 4
+        )
+    return layout
 
 
 def _create_layout(paper_id, paper_dir, evidence, config):
@@ -254,13 +276,15 @@ def _create_layout(paper_id, paper_dir, evidence, config):
         evidence.get("abstract", ""), abstract_height, config
     )
     footer_height = poster["footer_height"]
-    body_height = (
-        poster["height"]
-        - header_height
-        - abstract_height
-        - footer_height
-        - 2 * poster["section_gap"]
-        - poster["body_footer_gap"]
+    body_height = poster["reference_body_height"]
+    poster_height = max(
+        poster["min_height"],
+        header_height
+        + abstract_height
+        + 2 * poster["section_gap"]
+        + body_height
+        + poster["body_footer_gap"]
+        + footer_height,
     )
     column_width = (
         poster["width"] - 2 * poster["margin"] - poster["column_gap"]
@@ -347,7 +371,7 @@ def _create_layout(paper_id, paper_dir, evidence, config):
         "paper_id": paper_id,
         "canvas": {
             "width": poster["width"],
-            "height": poster["height"],
+            "height": round(poster_height, 3),
             "margin": poster["margin"],
             "column_gap": poster["column_gap"],
             "content_width": round(poster["width"] - 2 * poster["margin"], 3),

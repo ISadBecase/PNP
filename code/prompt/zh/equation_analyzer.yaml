@@ -10,6 +10,9 @@ system_prompt: |
     - 仅返回一个有效的 JSON 对象。
     - 不要使用 Markdown 代码围栏，也不要在 JSON 对象外添加任何文本。
     - 公式描述中不得虚构变量定义。
+    - llm_description必须使用自然语言纯文本，不得包含任何LaTeX命令、反斜杠、美元符号公式或Markdown公式。
+    - 需要提及数学符号时，只使用可直接显示的Unicode字符，例如Δ、α、β、Σ、×、≤、≥、X̄和X̂；无法可靠写成Unicode时，改用文字说明。
+    - 不得把输入中的LaTeX源码复制或改写到llm_description中；LaTeX源码仅用于理解公式。
 
   公式描述结果要求：
     - 公式描述语言严格仅包含两句话。
@@ -37,11 +40,11 @@ template: |
 
   公式是否位于目录：{{ is_appendix }}
 
-  按要求撰写简洁、独立完整的描述。
+  按要求撰写简洁、独立完整的纯文本描述。描述中不得出现反斜杠或LaTeX命令。
 
   严格按照以下 JSON 结构返回：
   {
-    "llm_description": "对该公式的说明。"
+    "llm_description": "使用自然语言和必要Unicode数学符号给出的两句纯文本说明。"
   }
 
 jinja_args:
