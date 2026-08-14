@@ -22,7 +22,7 @@
     </td>
     <td align="center">
       <img src="./assets/example2.png" width="200" alt="Reviewed result"><br>
-      <b>arXiv.2402.17228</b>
+      <b>arXiv.2602.19083</b>
     </td>
     <td align="center">
       <img src="./assets/example4.png" width="200" alt="Final result"><br>
@@ -76,11 +76,11 @@ This is a Paper2Poster project that uses agents to convert academic papers into 
     - ```shell
         & "D:\Anaconda3\envs\Pytorch\python.exe" .\code\entry.py 2402.17228 2508.10104 2312.00752
         ```
-    > [!TIP]
-    >
-    > If the generated poster does not meet your expectations, you can freely edit the LaTeX files under `output/poster/<paper_id>/` for personalized post-processing.
-    >
-    > You can also inspect the relevant parameters in `entry.py`, edit intermediate results, and resume execution from any stage of the pipeline to iteratively improve the final poster 🤗🤗🤗.
+> [!TIP]
+>
+> If the generated poster does not meet your expectations, you can freely edit the LaTeX files under `output/poster/<paper_id>/` for personalized post-processing.
+>
+> You can also inspect the relevant parameters in `entry.py`, edit intermediate results, and resume execution from any stage of the pipeline to iteratively improve the final poster 🤗🤗🤗.
 
 ## 4️⃣ File Tree
 
@@ -154,6 +154,7 @@ This is a Paper2Poster project that uses agents to convert academic papers into 
       ├── template/
       │   └── latex/
       │       ├── preamble.tex              # Theme colors, fonts, and Panel styles
+      │       ├── abstract_measure.tex.j2    # Natural-height measurement template for the abstract
       │       ├── panel.tex.j2              # Individual Panel template
       │       ├── column_preview.tex.j2     # Single-column preview template
       │       └── poster.tex.j2             # Final poster template
@@ -278,6 +279,7 @@ This is a Paper2Poster project that uses agents to convert academic papers into 
     - [Paper2Poster](https://github.com/paper2poster/paper2poster), NeurIPS 2025 Poster
     - [PosterGen](https://github.com/Y-Research-SBU/PosterGen), CVPR 2026 Findings
     - [PaperX](https://github.com/yutao1024/PaperX)
+    - [Paper2Any](https://github.com/OpenDCAI/Paper2Any)
   - 🌟 Skill
     - [Skill2Poster](https://github.com/LEON-gittech/Skill2Poster)
 - ☀️ Other interesting projects

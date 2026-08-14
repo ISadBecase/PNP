@@ -35,6 +35,25 @@ def _asset_paths(asset_type, asset):
     return asset.get("tex_file", ""), asset.get("png_file", "")
 
 
+def _select_panel_assets(panel):
+    importance = panel.get("asset_importance", {})
+    visual_assets = []
+    order = 0
+    for asset_type, field in (("figure", "figure_ids"), ("table", "table_ids")):
+        for asset_id in panel.get(field, []):
+            visual_assets.append(
+                (importance.get(asset_id, 0), order, asset_type, asset_id)
+            )
+            order += 1
+
+    selected = sorted(visual_assets, key=lambda item: (-item[0], item[1]))[:2]
+    assets = [(asset_type, asset_id) for _, _, asset_type, asset_id in selected]
+    assets.extend(
+        ("equation", asset_id) for asset_id in panel.get("equation_ids", [])
+    )
+    return assets
+
+
 def _estimate_text_height(text, column_width, config):
     text_config = config["text"]
     weighted_characters = sum(1.8 if ord(character) > 127 else 1 for character in text)
@@ -322,16 +341,18 @@ def _create_layout(paper_id, paper_dir, evidence, config):
                 asset_score = asset_importance.get(asset_id)
                 if not isinstance(asset_score, int) or not 1 <= asset_score <= 5:
                     raise ValueError(f"Invalid asset importance in {paper_id}: {asset_id}")
-                assets.append(
-                    _create_asset_metric(
-                        asset_type,
-                        asset_sources[asset_type][asset_id],
-                        asset_score,
-                        column_width,
-                        body_height,
-                        config,
-                    )
+
+        for asset_type, asset_id in _select_panel_assets(panel):
+            assets.append(
+                _create_asset_metric(
+                    asset_type,
+                    asset_sources[asset_type][asset_id],
+                    asset_importance[asset_id],
+                    column_width,
+                    body_height,
+                    config,
                 )
+            )
 
         text_height = _estimate_text_height(panel.get("text", ""), column_width, config)
         asset_rows = _arrange_asset_rows(assets, column_width, body_height, config)

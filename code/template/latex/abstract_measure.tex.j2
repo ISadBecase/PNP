@@ -1,0 +1,33 @@
+\documentclass{article}
+\input{preamble.tex}
+\geometry{paperwidth={{ content_width }}in,margin=0in}
+\pagestyle{empty}
+\newsavebox{\pnpabstractbox}
+\begin{document}
+\sbox{\pnpabstractbox}{
+\begin{minipage}{ {{ content_width }}in}
+\begin{tcolorbox}[
+  enhanced,
+  width=\linewidth,
+  colback=PNPLight,
+  colframe=PNPBlue,
+  coltitle=white,
+  colbacktitle=PNPBlue,
+  title={Abstract},
+  fonttitle=\bfseries\fontsize{ {{ abstract_title_font_size }} }{ {{ abstract_title_line_height }} }\selectfont,
+  boxrule=1.3pt,
+  arc=4pt,
+  left=0.30in,
+  right=0.30in,
+  top=0.22in,
+  bottom=0.22in,
+  before skip=0pt,
+  after skip=0pt
+]
+\begin{minipage}[t]{\linewidth}
+{\fontsize{ {{ abstract_font_size }} }{ {{ abstract_font_size * abstract_line_spacing }} }\selectfont\RaggedRight {{ abstract }}\par}
+\end{minipage}
+\end{tcolorbox}
+\end{minipage}}
+\typeout{PNPABSTRACTHEIGHT=\the\dimexpr\ht\pnpabstractbox+\dp\pnpabstractbox\relax}
+\end{document}

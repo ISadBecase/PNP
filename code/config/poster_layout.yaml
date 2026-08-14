@@ -15,8 +15,8 @@ header:
   title_line_height: 70
   author_font_size: 34
   author_line_height: 38
-  affiliation_font_size: 26
-  affiliation_line_height: 30
+  affiliation_font_size: 30
+  affiliation_line_height: 34
 
 abstract:
   title_font_size: 42

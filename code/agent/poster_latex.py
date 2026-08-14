@@ -190,6 +190,30 @@ def _measure_panels(layout, latex_dir, panel_gap=0):
     return measurements
 
 
+def _measure_abstract(layout, latex_dir, environment, config):
+    template = environment.get_template("abstract_measure.tex.j2")
+    source = template.render(
+        content_width=layout["canvas"]["content_width"],
+        abstract_title_font_size=layout["fonts"]["abstract_title_font_size"],
+        abstract_title_line_height=layout["fonts"]["abstract_title_line_height"],
+        abstract_font_size=layout["fonts"]["abstract_font_size"],
+        abstract_line_spacing=layout["fonts"]["abstract_line_spacing"],
+        abstract=_latex_escape(layout.get("abstract", "")),
+    )
+    tex_file = os.path.join(latex_dir, "measure_abstract.tex")
+    with open(tex_file, "w", encoding="utf-8") as file:
+        file.write(source)
+    output = _run_xelatex(tex_file, os.path.join(latex_dir, "measurements"))
+    match = re.search(r"PNPABSTRACTHEIGHT=(\d+(?:\.\d+)?)pt", output)
+    if not match:
+        raise RuntimeError(f"Unable to measure abstract height: {layout['paper_id']}")
+    measured_height = float(match.group(1)) / 72.27 + 0.02
+    layout["canvas"]["abstract_height"] = round(
+        max(config["abstract"]["min_height"], measured_height), 3
+    )
+    return layout["canvas"]["abstract_height"]
+
+
 def _columns_fit(layout, config):
     limit = layout["canvas"]["body_height"] * (1 + config["layout"]["overflow_tolerance"])
     return max(column["estimated_height"] for column in layout["columns"].values()) <= limit
@@ -284,6 +308,42 @@ def _write_columns(layout, latex_dir):
             file.write("\n".join(lines) + "\n")
 
 
+def _prepare_final_directory(latex_dir, final_dir, source):
+    os.makedirs(final_dir, exist_ok=True)
+    for directory in ("panels", "columns"):
+        target = os.path.join(final_dir, directory)
+        if os.path.isdir(target):
+            shutil.rmtree(target)
+    for filename in (
+        "main.aux",
+        "main.log",
+        "main.pdf",
+        "poster.aux",
+        "poster.log",
+        "poster.pdf",
+        "poster.png",
+        "poster.tex",
+    ):
+        target = os.path.join(final_dir, filename)
+        if os.path.isfile(target):
+            os.remove(target)
+
+    shutil.copyfile(
+        os.path.join(latex_dir, "preamble.tex"),
+        os.path.join(final_dir, "preamble.tex"),
+    )
+    shutil.copytree(
+        os.path.join(latex_dir, "panels"), os.path.join(final_dir, "panels")
+    )
+    shutil.copytree(
+        os.path.join(latex_dir, "columns"), os.path.join(final_dir, "columns")
+    )
+    tex_file = os.path.join(final_dir, "poster.tex")
+    with open(tex_file, "w", encoding="utf-8") as file:
+        file.write(source)
+    return tex_file
+
+
 def _validate_final_columns(layout):
     overflow = {}
     body_height = layout.get("canvas", {}).get("body_height", 0)
@@ -336,6 +396,7 @@ def render_poster_columns(args):
             file.write(preamble)
 
         _prepare_assets(layout, args.output_dir, latex_dir)
+        _measure_abstract(layout, latex_dir, environment, config)
         _fit_panel_typography(layout, latex_dir, environment, config)
         _write_columns(layout, latex_dir)
 
@@ -376,6 +437,8 @@ def render_final_poster(args):
         autoescape=False,
     )
     template = environment.get_template("poster.tex.j2")
+    with open(os.path.join("code", "config", "poster_layout.yaml"), "r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
     results = {}
     temp_root = os.path.join(args.output_dir, "temp")
     for paper_id in sorted(os.listdir(temp_root)):
@@ -385,10 +448,11 @@ def render_final_poster(args):
             continue
         with open(layout_file, "r", encoding="utf-8") as file:
             layout = json.load(file)
-        _validate_final_columns(layout)
         latex_dir = os.path.join(poster_dir, "latex")
+        _measure_abstract(layout, latex_dir, environment, config)
+        _update_dynamic_canvas(layout, config)
+        _validate_final_columns(layout)
         final_dir = os.path.join(args.output_dir, "poster", paper_id)
-        os.makedirs(final_dir, exist_ok=True)
         header = layout["header"]
         source = template.render(
             **layout["canvas"],
@@ -398,18 +462,12 @@ def render_final_poster(args):
             affiliations=_latex_escape("  |  ".join(header["affiliations"])),
             abstract=_latex_escape(layout.get("abstract", "")),
         )
-        tex_file = os.path.join(latex_dir, "main.tex")
-        with open(tex_file, "w", encoding="utf-8") as file:
-            file.write(source)
+        tex_file = _prepare_final_directory(latex_dir, final_dir, source)
         _run_xelatex(tex_file, final_dir, passes=2)
-        pdf_file = os.path.join(final_dir, "main.pdf")
         final_pdf = os.path.join(final_dir, "poster.pdf")
-        shutil.copyfile(pdf_file, final_pdf)
         png_file = _pdf_to_png(final_pdf, os.path.join(final_dir, "poster"), dpi=180)
-        shutil.copyfile(tex_file, os.path.join(final_dir, "poster.tex"))
-        shutil.copyfile(os.path.join(latex_dir, "preamble.tex"), os.path.join(final_dir, "preamble.tex"))
-        shutil.copytree(os.path.join(latex_dir, "panels"), os.path.join(final_dir, "panels"), dirs_exist_ok=True)
-        shutil.copytree(os.path.join(latex_dir, "columns"), os.path.join(final_dir, "columns"), dirs_exist_ok=True)
+        with open(layout_file, "w", encoding="utf-8") as file:
+            json.dump(layout, file, ensure_ascii=False, indent=2)
         results[paper_id] = {"tex": os.path.join(final_dir, "poster.tex"), "pdf": final_pdf, "png": png_file}
         logger.info("     ✅ Final poster rendered: %s", paper_id)
     return results

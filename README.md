@@ -22,7 +22,7 @@
     </td>
     <td align="center">
       <img src="./assets/example2.png" width="200" alt="审查结果"><br>
-      <b>arXiv.2402.17228</b>
+      <b>arXiv.2602.19083</b>
     </td>
     <td align="center">
       <img src="./assets/example4.png" width="200" alt="最终结果"><br>
@@ -80,7 +80,7 @@
 >
 > 如果您生成海报后认为其效果并不理想，可自由编辑 output/poster/<paper_id>/ 内的Latex文件，进行个性化的二次编辑。
 >
-> 实际上，您可以在entry.py中学习配置相关参数，以从项目运行过程中的任意阶段编辑后断点运行，逐步最终海报效果！🤗🤗🤗
+> 实际上，您可以在entry.py中学习配置相关参数，以从项目运行过程中的任意阶段编辑后断点运行，逐步完善最终海报效果！🤗🤗🤗
 
 ## 4️⃣ 文件树
 
@@ -154,6 +154,7 @@
       ├── template/
       │   └── latex/
       │       ├── preamble.tex              # 主题颜色、字体及Panel样式
+      │       ├── abstract_measure.tex.j2    # 摘要自然高度测量模板
       │       ├── panel.tex.j2              # 单个Panel模板
       │       ├── column_preview.tex.j2     # 单栏预览模板
       │       └── poster.tex.j2             # 最终海报模板
@@ -278,6 +279,7 @@
     - [Paper2Poster](https://github.com/paper2poster/paper2poster)，NeurIPS 2025 Poster
     - [PosterGen](https://github.com/Y-Research-SBU/PosterGen)，CVPR 2026 Findings
     - [PaperX](https://github.com/yutao1024/PaperX)
+    - [Paper2Any](https://github.com/OpenDCAI/Paper2Any)
   - 🌟 Skill
     - [Skill2Poster](https://github.com/LEON-gittech/Skill2Poster)
 - ☀️ 其他有趣项目
