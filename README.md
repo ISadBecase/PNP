@@ -13,38 +13,38 @@
 
 
 ## 1️⃣ 海报样例（2026.08.10）
-
+- 生成案例
 <table>
   <tr>
     <td align="center">
-      <img src="./assets/example3.png" width="200" alt="修改结果"><br>
+      <img src="./assets/example/example3.png" width="200" alt="修改结果"><br>
       <b>arXiv.2506.18028</b>
     </td>
     <td align="center">
-      <img src="./assets/example2.png" width="200" alt="审查结果"><br>
+      <img src="./assets/example/example2.png" width="200" alt="审查结果"><br>
       <b>arXiv.2602.19083</b>
     </td>
     <td align="center">
-      <img src="./assets/example4.png" width="200" alt="最终结果"><br>
+      <img src="./assets/example/example4.png" width="200" alt="最终结果"><br>
       <b>arXiv.2306.00978</b>
     </td>
     <td align="center">
-      <img src="./assets/example1.png" width="200" alt="生成结果"><br>
+      <img src="./assets/example/example1.png" width="200" alt="生成结果"><br>
       <b>arXiv.2211.10438</b>
     </td>
   </tr>
 </table>
-
-
+- 原例对比
+> Wait for the Moment.
 ## 2️⃣ 简介
 
-本项目为一个Paper2Poster项目，旨在借助智能体(Agent)将学术论文(Paper)转换为学术海报(Poster),基本无需人工介入，支持Latex格式二次编辑。
+本项目为一个Paper2Poster项目，旨在借助智能体(Agent)将学术论文(Paper)转换为学术海报(Poster),基本无需人工介入，支持`Latex`格式二次编辑。
 
 > [!NOTE]
 >
-> 项目需长期更新中，请等待 ✒️✒️✒️...
+> 项目需长期更新微调,请等待 ✒️✒️✒️...
 >
-> 若有相关问题或建议，可参考5️⃣ FAQ,其余问题请移步Issue 🤗🤗🤗...
+> 若有相关问题或建议，可先参考5️⃣ FAQ,其余问题请移步Issue 🤗🤗🤗...
 
 ## 3️⃣ 环境
 
@@ -154,7 +154,7 @@
       ├── template/
       │   └── latex/
       │       ├── preamble.tex              # 主题颜色、字体及Panel样式
-      │       ├── abstract_measure.tex.j2    # 摘要自然高度测量模板
+      │       ├── abstract_measure.tex.j2   # 摘要自然高度测量模板
       │       ├── panel.tex.j2              # 单个Panel模板
       │       ├── column_preview.tex.j2     # 单栏预览模板
       │       └── poster.tex.j2             # 最终海报模板
@@ -164,7 +164,7 @@
       │   ├── retry.py                      # API指数退避重试
       │   └── transport_en.py               # 中文Prompt翻译，以哈希规则
       │
-      └── arxiv2agent/					  # 详情参考[README Reference]
+      └── arxiv2agent/					    # 详情参考[README Reference]
           ├── __init__.py
           ├── NOTICE.md
           ├── arxiv_api.py                  # arXiv源码下载
@@ -216,13 +216,13 @@
   │           │       ├── layout.json
   │           │       └── review.json
   │           ├── previews/
-  │           │   ├── left.png		# 左栏预览图
-  │           │   └── right.png		# 右栏预览图
+  │           │   ├── left.png		    # 左栏预览图
+  │           │   └── right.png		    # 右栏预览图
   │           └── latex/
-  │               ├── preamble.tex	# LaTeX 导言区模板
+  │               ├── preamble.tex	    # LaTeX 导言区模板
   │               ├── panels/			# 海报各panel latex细节
-  │               ├── columns/		# 海报栏latex细节
-  │               └── measurements/	# 用于计算海报布局
+  │               ├── columns/		    # 海报栏latex细节
+  │               └── measurements/	    # 用于计算海报布局
   │
   └── poster/
       └── <paper_id>/
@@ -244,20 +244,18 @@
 ## 5️⃣ FAQ
 
 - API配置
-
   - 项目API可自由在.env配置。
   - 受限于资金和模型效果影响，README中的演示样例的主要使用配置为gpt-4o-mini,text-embedding-3-small,gpt-image-2;由于代码细节，非OPENAI模型暂不支持该项目。
   - ✒️ TODO: 后续将兼容其他厂商的API配置
 - 海报效果优化问题
-
   - 用户可在本项目生成后的Latex版本进行自由修正和编译，以满足个性化需求；
   - 本项目暂不支持横幅效果，不支持画幅尺寸调整；
   - 💡 海报格式布局方面，现有的支持画幅尺寸自定义的项目：有的通过线性模型拟合真实海报布局后再进行VLM微调，比如Paper2Poster；有的直接将画幅尺寸配置交给生图模型进行直接生成，如Paper2Slides。前者由于非直接AI生成，海报分辨率高，但格式单一死板；后者由于采用AI生成，布局自由且合理，视觉效果佳，但受限于模型影响导致海报分辨率较低；若要优化布局方式并保持成本可控的话，我认为应使用智能计算、强化学习等规则类算法，因为海报布局设计具有很多模糊的规则类限制，包括版面大小，文本长度，图片大小、信息间隔等；我并不擅长强化学习、智能算法等知识，故无法深入实践，也许我的判断有误，但当我接触到这个项目时，想到过一个Kaggle竞赛[Santa 2025 - Christmas Tree Packing Challenge](https://www.kaggle.com/competitions/santa-2025)，或许能为布局相关算法提供灵感；
+  - 💡 必要情况下，我认为应将论文PDF文件作为多模态数据来源之一:PDF文件不仅可以解析出图片合理的比例尺寸信息,也可以提高对Latex转图片的容错率;难点在于图片相似度匹配算法;
   - 💡 海报内容优化方面，建议修改相关Prompt而非升级模型配置；
   - ✒️ TODO:优化Prompt，提升海报内容质量；
   - ✒️ TODO:创新更佳的自由布局算法，提升画幅的可支配性；
 - API费用消耗
-
   - 在不使用VLM对表格图片资源做辅助分析的情况下，Token消耗费用较少，实际消耗随论文页数、论文配图数量而定；参考默认配置下（gpt-4o-mini,text-embedding-3-small,gpt-image-2），单次单论文运行成本一般 1-2 RMB;
 - 项目的一些BUG
   - ✒️ TODO: VLM迭代负反馈存在问题，即需改进多智能体协作部分；
@@ -266,7 +264,8 @@
   - 💡 为什么本项目中生成的海报图片呈现大小不均的问题？原始项目如Paper2Poster、Paper2Slides等均参考论文PDF，使用MinerU，Docling等工具将PDF解析为多模态数据后处理，原始PDF内的所有图片使用工具提取后其图片之间的相对比例是确定的，信息密度和面积是对应的合理的；但是本项目PNP是直接读取原始ARXIV TEX解压读取图片资源的，无法(低成本)读取原始latex中对图片的缩放比例，因此导致最终在海报中图片比例失调；同样的情况出现在表格和公式图片中：但为什么不直接使用表格和公式的latex形式呢？因为不同会议论文采用的latex模板大不相同，表格和公式的latex中难免插入宏定义，直接导入容易报错，提升兼容性也非易事，项目的工程化需要时间；
   - ✒️ TODO：本项目还未引入相关Benchmark,待更新；
   - ✒️ TODO：本项目还未在海报引入会议徽标、机构标识等相关代码,待更新；
-
+  - ✒️ TODO：对于原论文Latex代码中出现的多图组合形式，需要进行针对化的结构解析和海报导入，待更新；
+  - ✒️ TODO：当前`parser_arxiv.py`阶段仅支持`xelatex`,后期需拓展`pdflatex`、`lualatex`等,待更新;
 - 若有其他问题，请移步Issue 🤗🤗🤗
 
 

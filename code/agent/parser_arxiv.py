@@ -134,7 +134,7 @@ def convert_fragment(tex_path, dpi=600, background="white", force=True):
             else:
                 env = ""
             if env in ("align", "align*"):
-                body = f"$\\begin{{aligned}}\n{source}\n\\end{{aligned}}$\n"
+                body = f"\\begin{{{env}}}\n{source}\n\\end{{{env}}}\n"
             else:
                 body = f"$\\displaystyle {source}$\n"
         else:

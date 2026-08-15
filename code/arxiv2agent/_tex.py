@@ -617,7 +617,10 @@ def _expand_single_macro(text: str, macro: MacroDefinition) -> str:
         return pat.sub(lambda _m: macro.body, text)
     pat = re.compile(name_escaped + r'(?![a-zA-Z@])')
     replacements: list[tuple[int, int, str]] = []
+    covered_until = -1
     for match in pat.finditer(text):
+        if match.start() < covered_until:
+            continue
         start = match.start()
         pos = match.end()
         while pos < len(text) and text[pos] in ' \t\n':
@@ -655,6 +658,7 @@ def _expand_single_macro(text: str, macro: MacroDefinition) -> str:
         for i, arg in enumerate(args, 1):
             result = result.replace(f'#{i}', arg)
         replacements.append((start, pos, result))
+        covered_until = pos
     for start, end, replacement in reversed(replacements):
         text = text[:start] + replacement + text[end:]
     return text
