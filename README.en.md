@@ -28,10 +28,6 @@
       <img src="./assets/example4.png" width="200" alt="Final result"><br>
       <b>arXiv.2306.00978</b>
     </td>
-    <td align="center">
-      <img src="./assets/example1.png" width="200" alt="Generated result"><br>
-      <b>arXiv.2211.10438</b>
-    </td>
   </tr>
 </table>
 

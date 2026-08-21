@@ -28,14 +28,9 @@
       <img src="./assets/example/example4.png" width="200" alt="最终结果"><br>
       <b>arXiv.2306.00978</b>
     </td>
-    <td align="center">
-      <img src="./assets/example/example1.png" width="200" alt="生成结果"><br>
-      <b>arXiv.2211.10438</b>
-    </td>
   </tr>
 </table>
-- 原例对比
-> Wait for the Moment.
+
 ## 2️⃣ 简介
 
 本项目为一个Paper2Poster项目，旨在借助智能体(Agent)将学术论文(Paper)转换为学术海报(Poster),基本无需人工介入，支持`Latex`格式二次编辑。
